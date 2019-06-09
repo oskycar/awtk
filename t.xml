@@ -1,0 +1,3 @@
+<window anim_hint="htranslate" >
+  <mledit x="10" y="20" w="300" h="200" text="hello" />
+</window>

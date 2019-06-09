@@ -538,3 +538,9 @@
     <normal     bg_color="#f0f0f0" mask_color="#f0f0f0"/>
   </style>
 </slide_menu>
+
+<mledit>
+  <style name="default">
+    <normal text_color="black" />
+  </style>
+</mledit>
