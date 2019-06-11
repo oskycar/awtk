@@ -22,8 +22,8 @@
 #ifndef TK_MLEDIT_H
 #define TK_MLEDIT_H
 
-#include "text_edit.h"
 #include "base/widget.h"
+#include "base/text_edit.h"
 
 BEGIN_C_DECLS
 

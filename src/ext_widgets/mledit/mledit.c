@@ -38,12 +38,8 @@ static ret_t mledit_set_prop(widget_t* widget, const char* name, const value_t* 
   return_value_if_fail(widget != NULL && name != NULL && v != NULL, RET_BAD_PARAMS);
 
   if (tk_str_eq(name, WIDGET_PROP_TEXT)) {
-    text_edit_info_t info;
     wstr_from_value(&(widget->text), v);
-
-    text_edit_get_info(mledit->model, &info);
-    info.cursor = widget->text.size;
-    text_edit_set_info(mledit->model, &info);
+    text_edit_set_cursor(mledit->model, widget->text.size);
   }
 
   return RET_NOT_FOUND;
@@ -58,69 +54,10 @@ static ret_t mledit_on_destroy(widget_t* widget) {
   return RET_OK;
 }
 
-static ret_t mledit_paint_caret(widget_t* widget, canvas_t* c) {
-  mledit_t* mledit = MLEDIT(widget);
-  color_t cursor_color = color_init(0xff, 0, 0, 0xff);
-
-  if (mledit->caret_visible) {
-    uint32_t x = mledit->caret.x;
-    uint32_t y = mledit->caret.y;
-    uint32_t font_size = c->font_size;
-
-    canvas_set_stroke_color(c, cursor_color);
-    canvas_draw_vline(c, x, y, font_size);
-  }
-  mledit->caret_visible = !mledit->caret_visible;
-  mledit->caret_visible = TRUE;
-
-  return RET_OK;
-}
-
 static ret_t mledit_on_paint_self(widget_t* widget, canvas_t* c) {
-  uint32_t i = 0;
-  uint32_t x = 0;
-  uint32_t y = 0;
-  uint32_t line_height = 0;
-  text_edit_info_t info;
-  wstr_t* s = &(widget->text);
   mledit_t* mledit = MLEDIT(widget);
-  widget_prepare_text_style(widget, c);
-  color_t normal = color_init(0, 0, 0, 0xff);
-  color_t select = color_init(0xff, 0, 0, 0xff);
 
-  text_edit_set_canvas(mledit->model, c);
-  text_edit_get_info(mledit->model, &info);
-
-  line_height = info.line_height;
-  for (i = 0; i < s->size; i++) {
-    wchar_t* p = s->str + i;
-    uint32_t char_w = canvas_measure_text(c, p, 1);
-
-    if (i == info.cursor) {
-      mledit->caret.x = x;
-      mledit->caret.y = y;
-      mledit_paint_caret(widget, c);
-    }
-
-    if (i >= info.select_start && i < info.select_end) {
-      canvas_set_text_color(c, select);
-    } else {
-      canvas_set_text_color(c, normal);
-    }
-    canvas_draw_text(c, p, 1, x, y);
-
-    x += char_w + info.char_spacing;
-    if (*p == info.newline) {
-      x = 0;
-      y += line_height;
-    }
-  }
-
-  if (i == info.cursor) {
-    mledit->caret.x = x;
-    mledit->caret.y = y;
-    mledit_paint_caret(widget, c);
-  }
+  text_edit_paint(mledit->model, c);
 
   return RET_OK;
 }
@@ -216,7 +153,7 @@ static ret_t mledit_on_event(widget_t* widget, event_t* e) {
   return RET_OK;
 }
 
-static const char* s_mledit_properties[] = {};
+static const char* s_mledit_properties[] = {WIDGET_PROP_TEXT};
 
 TK_DECL_VTABLE(mledit) = {.size = sizeof(mledit_t),
                           .type = WIDGET_TYPE_MLEDIT,
