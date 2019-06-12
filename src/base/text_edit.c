@@ -24,6 +24,7 @@
 #include "tkc/utils.h"
 #include "base/events.h"
 #include "base/text_edit.h"
+#include "base/line_break.h"
 #include "base/clip_board.h"
 
 #define CHAR_SPACING 1
@@ -49,6 +50,28 @@ typedef struct _text_layout_info_t {
   uint32_t margin_r;
   uint32_t margin_b;
 } text_layout_info_t;
+
+typedef struct _row_info_t {
+  uint32_t offset;
+  uint16_t length;
+  uint16_t text_w;
+} row_info_t;
+
+typedef struct _rows_t {
+  uint32_t size;
+  uint32_t capacity;
+  row_info_t info[1];
+} rows_t;
+
+typedef struct _text_edit_impl_t {
+  text_edit_t text_edit;
+  STB_TexteditState state;
+
+  rows_t* rows;
+  point_t caret;
+  bool_t wrap_word;
+  text_layout_info_t layout_info;
+} text_edit_impl_t;
 
 static ret_t widget_get_text_layout_info(widget_t* widget, text_layout_info_t* info) {
   value_t v;
@@ -98,18 +121,6 @@ static ret_t widget_get_text_layout_info(widget_t* widget, text_layout_info_t* i
   return RET_OK;
 }
 
-typedef struct _row_info_t {
-  uint32_t offset;
-  uint16_t length;
-  uint16_t text_w;
-} row_info_t;
-
-typedef struct _rows_t {
-  uint32_t size;
-  uint32_t capacity;
-  row_info_t info[1];
-} rows_t;
-
 static rows_t* rows_create(uint32_t capacity) {
   uint32_t msize = sizeof(rows_t) + capacity * sizeof(row_info_t);
   rows_t* rows = (rows_t*)TKMEM_ALLOC(msize);
@@ -141,15 +152,6 @@ static ret_t rows_destroy(rows_t* rows) {
 
   return RET_OK;
 }
-
-typedef struct _text_edit_impl_t {
-  text_edit_t text_edit;
-  STB_TexteditState state;
-
-  rows_t* rows;
-  point_t caret;
-  text_layout_info_t layout_info;
-} text_edit_impl_t;
 
 #define DECL_IMPL(te) text_edit_impl_t* impl = (text_edit_impl_t*)(te)
 
@@ -205,17 +207,28 @@ static row_info_t* text_edit_layout_line(text_edit_t* text_edit, uint32_t row_nu
   memset(row, 0x00, sizeof(row_info_t));
   for (i = offset; i < text->size; i++) {
     wchar_t* p = text->str + i;
-    /*TODO: wrap*/
+    break_type_t break_type = LINE_BREAK_NO;
+    uint32_t char_w = canvas_measure_text(c, p, 1) + CHAR_SPACING; 
+
     if (i == state->cursor) {
       text_edit_set_caret_pos(impl, x, y, c->font_size);
     }
 
-    if (*p == STB_TEXTEDIT_NEWLINE) {
+    break_type = line_break_check(*p, p[1]);
+    if(break_type == LINE_BREAK_MUST) {
       i++;
       break;
+    } 
+    
+    if((x + char_w) > layout_info->w) {
+      if(break_type == LINE_BREAK_NO) {
+        i--;
+        x -= canvas_measure_text(c, p-1, 1) + CHAR_SPACING;
+      }
+      break;
     }
-
-    x += canvas_measure_text(c, p, 1) + CHAR_SPACING;
+        
+    x += char_w;
   }
 
   if (i == state->cursor && state->cursor == text->size) {
@@ -468,6 +481,7 @@ text_edit_t* text_edit_create(widget_t* widget, bool_t signle_line) {
   impl = TKMEM_ZALLOC(text_edit_impl_t);
   return_value_if_fail(impl != NULL, NULL);
 
+  impl->wrap_word = !signle_line;
   impl->text_edit.widget = widget;
   stb_textedit_initialize_state(&(impl->state), signle_line);
   if (!signle_line) {
@@ -683,6 +697,16 @@ ret_t text_edit_set_cursor(text_edit_t* text_edit, uint32_t cursor) {
   return_value_if_fail(text_edit != NULL, RET_BAD_PARAMS);
 
   impl->state.cursor = cursor;
+  text_edit_layout(text_edit);
+
+  return RET_OK;
+}
+
+ret_t text_edit_set_wrap_word(text_edit_t* text_edit, bool_t wrap_word) {
+  DECL_IMPL(text_edit);
+  return_value_if_fail(text_edit != NULL, RET_BAD_PARAMS);
+
+  impl->wrap_word = wrap_word;
   text_edit_layout(text_edit);
 
   return RET_OK;

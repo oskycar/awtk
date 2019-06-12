@@ -119,6 +119,16 @@ ret_t text_edit_set_select(text_edit_t* text_edit, uint32_t start, uint32_t end)
 ret_t text_edit_set_cursor(text_edit_t* text_edit, uint32_t cursor);
 
 /**
+ * @method text_edit_set_wrap_word
+ * 设置光标位置。
+ * @param {text_edit_t*} text_edit text_edit对象。
+ * @param {bool_t} wrap_word 光标偏移。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t text_edit_set_wrap_word(text_edit_t* text_edit, bool_t wrap_word);
+
+/**
  * @method text_edit_paint
  * 绘制文本。
  * @param {text_edit_t*} text_edit text_edit对象。
