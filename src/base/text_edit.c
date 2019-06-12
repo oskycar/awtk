@@ -649,6 +649,7 @@ ret_t text_edit_key_down(text_edit_t* text_edit, key_event_t* evt) {
         value_set_str(&v, data);
         wstr_init(&str, 0);
         wstr_from_value(&str, &v);
+        wstr_normalize_newline(&str, STB_TEXTEDIT_NEWLINE);
         text_edit_paste(text_edit, str.str, str.size);
         wstr_reset(&str);
       }
