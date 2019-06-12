@@ -1,4 +1,5 @@
-﻿#include "tkc/wstr.h"
+﻿#include "tkc/str.h"
+#include "tkc/wstr.h"
 #include "tkc/mem.h"
 #include "gtest/gtest.h"
 
@@ -342,4 +343,45 @@ TEST(WStr, append_len) {
   ASSERT_EQ(wcscmp(str.str, L"123abc"), 0);
 
   wstr_reset(&str);
+}
+
+TEST(WStr, normalize_newline) {
+  str_t str;
+  wstr_t wstr;
+
+  str_init(&str, 0);
+  wstr_init(&wstr, 0);
+
+  wstr_set(&wstr, L"a\nb");
+  ASSERT_EQ(wstr_normalize_newline(&wstr, '\n'), RET_OK);
+  str_from_wstr(&str, wstr.str);
+  ASSERT_STREQ(str.str, "a\nb");
+  
+  wstr_set(&wstr, L"a\r\nb");
+  ASSERT_EQ(wstr_normalize_newline(&wstr, '\n'), RET_OK);
+  str_from_wstr(&str, wstr.str);
+  ASSERT_STREQ(str.str, "a\nb");
+  
+  wstr_set(&wstr, L"a\rb");
+  ASSERT_EQ(wstr_normalize_newline(&wstr, '\n'), RET_OK);
+  str_from_wstr(&str, wstr.str);
+  ASSERT_STREQ(str.str, "a\nb");
+  
+  wstr_set(&wstr, L"a\rb");
+  ASSERT_EQ(wstr_normalize_newline(&wstr, ' '), RET_OK);
+  str_from_wstr(&str, wstr.str);
+  ASSERT_STREQ(str.str, "a b");
+  
+  wstr_set(&wstr, L"a\rb\r\r");
+  ASSERT_EQ(wstr_normalize_newline(&wstr, '\n'), RET_OK);
+  str_from_wstr(&str, wstr.str);
+  ASSERT_STREQ(str.str, "a\nb\n\n");
+  
+  wstr_set(&wstr, L"a\r\nb\r\n\r\n");
+  ASSERT_EQ(wstr_normalize_newline(&wstr, '\n'), RET_OK);
+  str_from_wstr(&str, wstr.str);
+  ASSERT_STREQ(str.str, "a\nb\n\n");
+
+  str_reset(&str);
+  wstr_reset(&wstr);
 }
