@@ -214,7 +214,7 @@ static row_info_t* text_edit_layout_line(text_edit_t* text_edit, uint32_t row_nu
       text_edit_set_caret_pos(impl, x, y, c->font_size);
     }
 
-    break_type = line_break_check(*p, p[1]);
+    break_type = word_break_check(*p, p[1]);
     if(break_type == LINE_BREAK_MUST) {
       i++;
       break;
