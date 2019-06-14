@@ -207,26 +207,28 @@ static row_info_t* text_edit_layout_line(text_edit_t* text_edit, uint32_t row_nu
   memset(row, 0x00, sizeof(row_info_t));
   for (i = offset; i < text->size; i++) {
     wchar_t* p = text->str + i;
-    break_type_t break_type = LINE_BREAK_NO;
+    break_type_t word_break= LINE_BREAK_NO;
+    break_type_t line_break= LINE_BREAK_NO;
     uint32_t char_w = canvas_measure_text(c, p, 1) + CHAR_SPACING; 
+    uint32_t next_char_w = canvas_measure_text(c, p+1, 1) + CHAR_SPACING; 
 
     if (i == state->cursor) {
       text_edit_set_caret_pos(impl, x, y, c->font_size);
     }
 
-    break_type = line_break_check(*p, p[1]);
-    if(break_type == LINE_BREAK_MUST) {
+    line_break = line_break_check(*p, p[1]);
+    if(line_break== LINE_BREAK_MUST) {
       i++;
       break;
     } 
     
-    break_type = word_break_check(*p, p[1]);
+    word_break = word_break_check(*p, p[1]);
     if((x + char_w) > layout_info->w) {
-      if(break_type == LINE_BREAK_NO) {
-        i--;
-        x -= canvas_measure_text(c, p-1, 1) + CHAR_SPACING;
-      }
       break;
+    } else if((x + char_w + next_char_w) >= layout_info->w) {
+      if(line_break == LINE_BREAK_NO || word_break == LINE_BREAK_NO) {
+        break;
+      }
     }
         
     x += char_w;

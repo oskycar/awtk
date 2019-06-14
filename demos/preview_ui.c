@@ -173,6 +173,10 @@ int main(int argc, char* argv[]) {
   assets_init();
   tk_ext_widgets_init();
 
+#ifdef WITH_FS_RES
+  system_info_set_default_font(system_info(), "default_full");
+#endif /*WITH_FS_RES*/
+
   preview_ui(filename);
   tk_run();
 
