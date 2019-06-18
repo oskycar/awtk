@@ -70,6 +70,7 @@ typedef struct _text_edit_impl_t {
   rows_t* rows;
   point_t caret;
   bool_t wrap_word;
+  bool_t caret_visible;
   text_layout_info_t layout_info;
 } text_edit_impl_t;
 
@@ -414,7 +415,7 @@ ret_t text_edit_paint(text_edit_t* text_edit, canvas_t* c) {
     canvas_draw_vline(c, layout_info->margin_l + layout_info->w, layout_info->margin_t,
                       layout_info->h);
 
-    if (state->select_start == state->select_end) {
+    if (state->select_start == state->select_end && impl->caret_visible) {
       text_edit_paint_caret(text_edit);
     }
   }
@@ -492,6 +493,15 @@ text_edit_t* text_edit_create(widget_t* widget, bool_t signle_line) {
   }
 
   return (text_edit_t*)impl;
+}
+
+ret_t text_edit_invert_caret_visible(text_edit_t* text_edit) {
+  DECL_IMPL(text_edit);
+  return_value_if_fail(text_edit, RET_BAD_PARAMS);
+
+  impl->caret_visible = !impl->caret_visible;
+
+  return RET_OK;
 }
 
 ret_t text_edit_set_max_rows(text_edit_t* text_edit, uint32_t max_rows) {

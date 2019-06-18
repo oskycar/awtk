@@ -61,9 +61,7 @@ typedef struct _mledit_t {
 
   /*private*/
   text_edit_t* model;
-
-  point_t caret;
-  bool_t caret_visible;
+  uint32_t timer_id;
 } mledit_t;
 
 /**

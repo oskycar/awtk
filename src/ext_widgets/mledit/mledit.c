@@ -91,6 +91,22 @@ static ret_t mledit_request_input_method(widget_t* widget) {
   return RET_OK;
 }
 
+static ret_t mledit_update_caret(const timer_info_t* timer) {
+  widget_t* widget = WIDGET(timer->ctx);
+  mledit_t* mledit = MLEDIT(widget);
+
+  widget_invalidate_force(widget, NULL);
+  text_edit_invert_caret_visible(mledit->model);
+
+  if (widget->focused) {
+    return RET_REPEAT;
+  } else {
+    mledit->timer_id = TK_INVALID_ID;
+    return RET_REMOVE;
+  }
+
+}
+
 static ret_t mledit_on_event(widget_t* widget, event_t* e) {
   uint32_t type = e->type;
   mledit_t* mledit = MLEDIT(widget);
@@ -135,6 +151,7 @@ static ret_t mledit_on_event(widget_t* widget, event_t* e) {
     }
     case EVT_FOCUS: {
       // mledit_request_input_method(widget);
+      mledit->timer_id = timer_add(mledit_update_caret, widget, 600);
       break;
     }
     case EVT_WHEEL: {
