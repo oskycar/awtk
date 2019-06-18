@@ -41,7 +41,6 @@ static ret_t edit_dispatch_event(widget_t* widget, event_type_t type) {
 }
 
 static ret_t edit_update_caret(const timer_info_t* timer) {
-  rect_t r;
   edit_t* edit = NULL;
   widget_t* widget = NULL;
   return_value_if_fail(timer != NULL, RET_REMOVE);
@@ -50,9 +49,8 @@ static ret_t edit_update_caret(const timer_info_t* timer) {
   widget = WIDGET(timer->ctx);
   return_value_if_fail(edit != NULL && widget != NULL, RET_REMOVE);
 
-  r = rect_init(edit->caret_x, 0, 1, widget->h);
-  edit->caret_visible = !edit->caret_visible;
-  widget_invalidate_force(widget, &r);
+  widget_invalidate_force(widget, NULL);
+  text_edit_invert_caret_visible(edit->model);
 
   if (widget->focused) {
     return RET_REPEAT;
@@ -260,16 +258,9 @@ ret_t edit_on_paint_self(widget_t* widget, canvas_t* c) {
     r.w -= 3;
   }
 
-  edit_draw_text(widget, c, &text, &r);
+//  edit_draw_text(widget, c, &text, &r);
 
-  if (widget->focused && !edit->readonly && edit->caret_visible) {
-    color_t black = edit->cursor_pos == edit->cursor_pre ? color_init(0, 0, 0, 0xff)
-                                                         : color_init(255, 255, 255, 0xff);
-    color_t fg = style_get_color(style, STYLE_ID_FG_COLOR, black);
-    canvas_set_stroke_color(c, fg);
-
-    canvas_draw_vline(c, edit->caret_x, top_margin, h);
-  }
+  text_edit_paint(edit->model, c);
 
   return RET_OK;
 }
@@ -402,11 +393,11 @@ static ret_t edit_input_char(widget_t* widget, wchar_t c) {
       }
 
       if (c >= '0' && c <= '9') {
-        ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+        ret = text_edit_paste(edit->model, &c, 1);
         break;
       } else if (c == '+' || (c == '-' && input_type == INPUT_INT)) {
         if (edit->cursor_pos == 0) {
-          ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+          ret = text_edit_paste(edit->model, &c, 1);
         }
         break;
       }
@@ -418,16 +409,16 @@ static ret_t edit_input_char(widget_t* widget, wchar_t c) {
         return RET_FAIL;
       }
       if (c >= '0' && c <= '9') {
-        ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+        ret = text_edit_paste(edit->model, &c, 1);
         break;
       } else if (c == '+' || (c == '-' && input_type == INPUT_FLOAT)) {
         if (edit->cursor_pos == 0) {
-          ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+          ret = text_edit_paste(edit->model, &c, 1);
         }
         break;
       } else if (c == '.' || c == 'e') {
         if (edit->cursor_pos > 0 && wcs_chr(text->str, c) == NULL) {
-          ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+          ret = text_edit_paste(edit->model, &c, 1);
         }
       }
       break;
@@ -435,10 +426,10 @@ static ret_t edit_input_char(widget_t* widget, wchar_t c) {
     case INPUT_EMAIL: {
       if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' ||
           c == '.' || c == '_') {
-        ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+        ret = text_edit_paste(edit->model, &c, 1);
       } else if (c == '@') {
         if (edit->cursor_pos > 0 && wcs_chr(text->str, c) == NULL) {
-          ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+          ret = text_edit_paste(edit->model, &c, 1);
         }
       }
       break;
@@ -448,28 +439,28 @@ static ret_t edit_input_char(widget_t* widget, wchar_t c) {
         break;
       }
       if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
-        ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+        ret = text_edit_paste(edit->model, &c, 1);
       } else if (c == 'X' || c == 'x') {
         if (edit->cursor_pos == 1 && text->str[0] == '0') {
-          ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+          ret = text_edit_paste(edit->model, &c, 1);
         }
       }
       break;
     }
     case INPUT_PHONE: {
       if (c >= '0' && c <= '9') {
-        ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+        ret = text_edit_paste(edit->model, &c, 1);
         break;
       } else if (c == '-') {
         if (edit->cursor_pos > 0 && wcs_chr(text->str, c) == NULL) {
-          ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+          ret = text_edit_paste(edit->model, &c, 1);
         }
       }
       break;
     }
     default: {
       if (widget->text.size < edit->limit.u.t.max) {
-        ret = wstr_insert(text, edit->cursor_pos, &c, 1);
+        ret = text_edit_paste(edit->model, &c, 1);
       }
     }
   }
@@ -745,15 +736,13 @@ ret_t edit_on_event(widget_t* widget, event_t* e) {
     return RET_OK;
   }
 
+  widget_invalidate(widget, NULL);
+
   switch (type) {
     case EVT_POINTER_DOWN: {
       pointer_event_t evt = *(pointer_event_t*)e;
       if (widget_find_target(widget, evt.x, evt.y) == NULL) {
-        point_t p = {evt.x, evt.y};
-        uint32_t pos = 0;
-        widget_to_local(widget, &p);
-        pos = edit_calcu_pos(widget, p.x);
-        edit_set_cursor_pos(widget, pos, pos);
+        text_edit_click(edit->model, evt.x, evt.y);
         widget_grab(widget->parent, widget);
       }
 
@@ -771,11 +760,7 @@ ret_t edit_on_event(widget_t* widget, event_t* e) {
     case EVT_POINTER_MOVE: {
       if (widget->parent && widget->parent->grab_widget == widget) {
         pointer_event_t evt = *(pointer_event_t*)e;
-        point_t p = {evt.x, evt.y};
-        uint32_t pos = 0;
-        widget_to_local(widget, &p);
-        pos = edit_calcu_pos(widget, p.x);
-        edit_set_cursor_pos(widget, edit->cursor_pre, pos);
+        text_edit_drag(edit->model, evt.x, evt.y);
       }
       break;
     }
@@ -784,10 +769,7 @@ ret_t edit_on_event(widget_t* widget, event_t* e) {
       break;
     }
     case EVT_KEY_DOWN: {
-      key_event_t* evt = (key_event_t*)e;
-      edit_on_key_down(widget, evt);
-      widget_invalidate(widget, NULL);
-
+      text_edit_key_down(edit->model, (key_event_t*)e);
       break;
     }
     case EVT_IM_COMMIT: {
@@ -1369,7 +1351,9 @@ static ret_t edit_on_destroy(widget_t* widget) {
     idle_remove(edit->idle_id);
     edit->idle_id = TK_INVALID_ID;
   }
+
   TKMEM_FREE(edit->tips);
+  text_edit_destroy(edit->model);
 
   return RET_OK;
 }
@@ -1428,6 +1412,9 @@ widget_t* edit_create_ex(widget_t* parent, const widget_vtable_t* vt, xy_t x, xy
   edit_update_status(widget);
   edit->timer_id = TK_INVALID_ID;
   edit->idle_id = idle_add(edit_hook_children_button, edit);
+  
+  edit->model = text_edit_create(widget, TRUE);
+  ENSURE(edit->model != NULL);
 
   return widget;
 }

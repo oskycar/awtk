@@ -42,7 +42,7 @@ typedef struct _text_edit_t {
  *
  * @return {widget_t*} 对象。
  */
-text_edit_t* text_edit_create(widget_t* widget, bool_t signle_line);
+text_edit_t* text_edit_create(widget_t* widget, bool_t single_line);
 
 /**
  * @method text_edit_set_canvas
