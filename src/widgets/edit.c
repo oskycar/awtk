@@ -29,8 +29,10 @@
 #include "tkc/utils.h"
 #include "base/enums.h"
 #include "base/events.h"
+#include "base/clip_board.h"
 #include "base/window_manager.h"
 
+#define PASSWORD_MASK_CHAR '*'
 static ret_t edit_update_status(widget_t* widget);
 
 static ret_t edit_dispatch_event(widget_t* widget, event_type_t type) {
@@ -56,6 +58,7 @@ static ret_t edit_update_caret(const timer_info_t* timer) {
     return RET_REPEAT;
   } else {
     edit->timer_id = TK_INVALID_ID;
+    text_edit_set_caret_visible(edit->model, FALSE);
     return RET_REMOVE;
   }
 }
@@ -366,6 +369,27 @@ static ret_t edit_pointer_up_cleanup(widget_t* widget) {
   return RET_OK;
 }
 
+static ret_t edit_paste(widget_t* widget) {
+  value_t v;
+  wstr_t str;
+  const char* data = clip_board_get_text();
+  if (data != NULL) {
+    uint32_t i = 0;
+    value_set_str(&v, data);
+    wstr_init(&str, 0);
+    wstr_from_value(&str, &v);
+    wstr_normalize_newline(&str, ' ');
+
+    for(i = 0; i < str.size; i++) {
+      edit_input_char(widget, str.str[i]);
+    }
+
+    wstr_reset(&str);
+  }
+
+  return RET_OK;
+}
+
 static ret_t edit_on_key_down(widget_t* widget, key_event_t* e) {
  uint32_t key = e->key;
  edit_t* edit = EDIT(widget);
@@ -375,6 +399,7 @@ static ret_t edit_on_key_down(widget_t* widget, key_event_t* e) {
   } else if (key == TK_KEY_DOWN) {
     if (!edit_is_number(widget)) {
       widget_focus_next(widget);
+      return RET_OK;
     } else {
       edit_dec(edit);
     }
@@ -382,13 +407,36 @@ static ret_t edit_on_key_down(widget_t* widget, key_event_t* e) {
   } else if (key == TK_KEY_UP) {
     if (!edit_is_number(widget)) {
       widget_focus_prev(widget);
+      return RET_OK;
     } else {
       edit_inc(edit);
     }
     return RET_OK;
   }
-   
-  return text_edit_key_down(edit->model, (key_event_t*)e);
+
+  if(key == TK_KEY_BACKSPACE 
+    || key == TK_KEY_DELETE 
+    || key == TK_KEY_LEFT 
+    || key == TK_KEY_RIGHT
+    || key == TK_KEY_HOME
+    || key == TK_KEY_END
+    || ((e->ctrl || e->cmd) && (key == TK_KEY_a 
+      || key == TK_KEY_y 
+      || key == TK_KEY_z 
+      || key == TK_KEY_v
+      || key == TK_KEY_x 
+      || key == TK_KEY_c))
+    ) {
+      if(key == TK_KEY_v) {
+        edit_paste(widget);
+      } else {
+        return text_edit_key_down(edit->model, (key_event_t*)e);
+      }
+  } else if(system_info()->app_type != APP_DESKTOP && key < 128 && isprint(key)) {
+    edit_input_char(widget, (wchar_t)key);
+  }
+
+  return RET_OK;
 }
 
 ret_t edit_on_event(widget_t* widget, event_t* e) {
@@ -705,6 +753,10 @@ ret_t edit_set_prop(widget_t* widget, const char* name, const value_t* v) {
     }
     edit->limit.type = input_type;
 
+    if(input_type == INPUT_PASSWORD) {
+      edit_set_password_visible(widget, FALSE);
+    }
+
     return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_READONLY)) {
     edit->readonly = value_bool(v);
@@ -756,6 +808,10 @@ ret_t edit_set_password_visible(widget_t* widget, bool_t password_visible) {
   return_value_if_fail(edit != NULL, RET_BAD_PARAMS);
 
   edit->password_visible = password_visible;
+  text_edit_set_mask(edit->model, !password_visible);
+  text_edit_set_mask_char(edit->model, PASSWORD_MASK_CHAR);
+  text_edit_set_cursor(edit->model, -1);
+  widget_invalidate(widget, NULL);
 
   return RET_OK;
 }
@@ -958,10 +1014,12 @@ static ret_t edit_on_clear(void* ctx, event_t* e) {
 
 static ret_t edit_on_password_visible(void* ctx, event_t* e) {
   edit_t* edit = EDIT(ctx);
+  bool_t password_visible = FALSE;
   widget_t* widget = WIDGET(e->target);
   return_value_if_fail(edit != NULL && widget != NULL, RET_BAD_PARAMS);
 
-  edit->password_visible = widget_get_prop_bool(widget, WIDGET_PROP_VALUE, edit->password_visible);
+  password_visible = widget_get_prop_bool(widget, WIDGET_PROP_VALUE, edit->password_visible);
+  edit_set_password_visible(WIDGET(edit), password_visible);
 
   return RET_OK;
 }

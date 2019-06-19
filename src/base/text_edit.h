@@ -131,6 +131,7 @@ uint32_t text_edit_get_cursor(text_edit_t* text_edit);
 ret_t text_edit_set_wrap_word(text_edit_t* text_edit, bool_t wrap_word);
 
 ret_t text_edit_invert_caret_visible(text_edit_t* text_edit);
+ret_t text_edit_set_caret_visible(text_edit_t* text_edit, bool_t caret_visible);
 
 ret_t text_edit_set_max_rows(text_edit_t* text_edit, uint32_t max_rows);
 

@@ -195,6 +195,7 @@ static row_info_t* text_edit_single_line_layout_line(text_edit_t* text_edit, uin
   uint32_t i = 0;
   uint32_t x = 0;
   uint32_t y = 0;
+  uint32_t char_w = 0;
   DECL_IMPL(text_edit);
   rows_t* rows = impl->rows;
   canvas_t* c = text_edit->c;
@@ -205,8 +206,8 @@ static row_info_t* text_edit_single_line_layout_line(text_edit_t* text_edit, uin
 
   memset(row, 0x00, sizeof(row_info_t));
   for (i = offset; i < text->size; i++) {
-    wchar_t* p = text->str + i;
-    uint32_t char_w = canvas_measure_text(c, p, 1) + CHAR_SPACING; 
+    wchar_t chr = impl->mask ? impl->mask_char : text->str[i];
+    char_w = canvas_measure_text(c, &chr, 1) + CHAR_SPACING; 
 
     if (i == state->cursor) {
       text_edit_set_caret_pos(impl, x, y, c->font_size);
@@ -428,8 +429,8 @@ static ret_t text_edit_paint_real_text(text_edit_t* text_edit) {
 
     for (k = 0; k < iter->length; k++) {
       uint32_t offset = iter->offset + k;
-      wchar_t* p = text->str + offset;
-      uint32_t char_w = canvas_measure_text(c, p, 1);
+      wchar_t chr = impl->mask ? impl->mask_char : text->str[offset];
+      uint32_t char_w = canvas_measure_text(c, &chr, 1);
 
       if ((x + char_w) < view_left) {
         x += char_w + CHAR_SPACING;
@@ -440,7 +441,7 @@ static ret_t text_edit_paint_real_text(text_edit_t* text_edit) {
         break;
       }
 
-      if (*p != STB_TEXTEDIT_NEWLINE) {
+      if (chr != STB_TEXTEDIT_NEWLINE) {
         uint32_t rx = x - layout_info->ox;
         uint32_t ry = y - layout_info->oy;
 
@@ -453,7 +454,7 @@ static ret_t text_edit_paint_real_text(text_edit_t* text_edit) {
           canvas_set_text_color(c, text_color);
         }
 
-        canvas_draw_text(c, p, 1, rx, ry);
+        canvas_draw_text(c, &chr, 1, rx, ry);
         x += char_w + CHAR_SPACING;
       }
     }
@@ -578,6 +579,15 @@ text_edit_t* text_edit_create(widget_t* widget, bool_t single_line) {
 
   wstr_init(&(impl->tips), 0);
   return (text_edit_t*)impl;
+}
+
+ret_t text_edit_set_caret_visible(text_edit_t* text_edit, bool_t caret_visible) {
+  DECL_IMPL(text_edit);
+  return_value_if_fail(text_edit, RET_BAD_PARAMS);
+
+  impl->caret_visible = caret_visible;
+
+  return RET_OK;
 }
 
 ret_t text_edit_invert_caret_visible(text_edit_t* text_edit) {
