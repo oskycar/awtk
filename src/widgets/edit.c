@@ -434,6 +434,7 @@ ret_t edit_on_event(widget_t* widget, event_t* e) {
     }
     case EVT_KEY_DOWN: {
       edit_on_key_down(widget, (key_event_t*)e);
+      edit_update_status(widget);
       break;
     }
     case EVT_IM_COMMIT: {
@@ -571,6 +572,7 @@ ret_t edit_set_input_tips(widget_t* widget, const char* tips) {
 
   TKMEM_FREE(edit->tips);
   edit->tips = tk_strdup(tips);
+  text_edit_set_tips(edit->model, edit->tips);
 
   return RET_OK;
 }
