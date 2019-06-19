@@ -118,6 +118,8 @@ ret_t text_edit_set_select(text_edit_t* text_edit, uint32_t start, uint32_t end)
  */
 ret_t text_edit_set_cursor(text_edit_t* text_edit, uint32_t cursor);
 
+uint32_t text_edit_get_cursor(text_edit_t* text_edit);
+
 /**
  * @method text_edit_set_wrap_word
  * 设置光标位置。

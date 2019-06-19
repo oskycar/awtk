@@ -75,49 +75,42 @@ typedef struct _text_edit_impl_t {
   text_layout_info_t layout_info;
 } text_edit_impl_t;
 
+#define DECL_IMPL(te) text_edit_impl_t* impl = (text_edit_impl_t*)(te)
+
 static ret_t widget_get_text_layout_info(widget_t* widget, text_layout_info_t* info) {
   value_t v;
   return_value_if_fail(widget != NULL && info != NULL, RET_BAD_PARAMS);
 
   value_set_int(&v, 0);
-
-  //  memset(info, 0x00, sizeof(text_layout_info_t));
-
   info->widget_w = widget->w;
   info->widget_h = widget->h;
   info->virtual_w = widget->w;
   info->virtual_h = widget->h;
 
-  if (widget_get_prop(widget, WIDGET_PROP_XOFFSET, &v) == RET_OK) {
-    //    info->ox = value_int(&v);
-  }
-
-  if (widget_get_prop(widget, WIDGET_PROP_YOFFSET, &v) == RET_OK) {
-    //    info->oy = value_int(&v);
-  }
-
   if (widget_get_prop(widget, WIDGET_PROP_LEFT_MARGIN, &v) == RET_OK) {
     info->margin_l = value_int(&v);
+  } else {
+    info->margin_l = 1;
   }
 
   if (widget_get_prop(widget, WIDGET_PROP_RIGHT_MARGIN, &v) == RET_OK) {
     info->margin_r = value_int(&v);
+  } else {
+    info->margin_r = 1;
   }
 
   if (widget_get_prop(widget, WIDGET_PROP_TOP_MARGIN, &v) == RET_OK) {
     info->margin_t = value_int(&v);
+  } else {
+    info->margin_t = 1;
   }
 
   if (widget_get_prop(widget, WIDGET_PROP_BOTTOM_MARGIN, &v) == RET_OK) {
     info->margin_b = value_int(&v);
+  } else {
+    info->margin_b = 1;
   }
 
-/*
-  info->margin_l = 16;
-  info->margin_r = 8;
-  info->margin_t = 23;
-  info->margin_b = 5;
-*/
   info->w = info->widget_w - info->margin_l - info->margin_r;
   info->h = info->widget_h - info->margin_t - info->margin_b;
 
@@ -155,8 +148,6 @@ static ret_t rows_destroy(rows_t* rows) {
 
   return RET_OK;
 }
-
-#define DECL_IMPL(te) text_edit_impl_t* impl = (text_edit_impl_t*)(te)
 
 static ret_t text_edit_set_caret_pos(text_edit_impl_t* impl, uint32_t x, uint32_t y,
                                      uint32_t font_size) {
@@ -767,14 +758,29 @@ ret_t text_edit_paste(text_edit_t* text_edit, wchar_t* str, uint32_t size) {
 }
 
 ret_t text_edit_set_cursor(text_edit_t* text_edit, uint32_t cursor) {
+  wstr_t* text = NULL;
   DECL_IMPL(text_edit);
   return_value_if_fail(text_edit != NULL, RET_BAD_PARAMS);
+
+  text = &(text_edit->widget->text);
+
+  if(cursor > text->size) {
+    cursor = text->size;
+  }
 
   impl->state.cursor = cursor;
   text_edit_layout(text_edit);
 
   return RET_OK;
 }
+
+uint32_t text_edit_get_cursor(text_edit_t* text_edit) {
+  DECL_IMPL(text_edit);
+  return_value_if_fail(text_edit != NULL, 0);
+
+  return impl->state.cursor;
+}
+
 
 ret_t text_edit_set_wrap_word(text_edit_t* text_edit, bool_t wrap_word) {
   DECL_IMPL(text_edit);
