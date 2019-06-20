@@ -19,6 +19,8 @@
  *
  */
 
+#include <wctype.h>
+
 #include "tkc/mem.h"
 #include "tkc/utf8.h"
 #include "tkc/utils.h"
@@ -55,6 +57,7 @@ typedef struct _row_info_t {
   uint32_t offset;
   uint16_t length;
   uint16_t text_w;
+  uint16_t x;
 } row_info_t;
 
 typedef struct _rows_t {
@@ -82,6 +85,8 @@ typedef struct _text_edit_impl_t {
 } text_edit_impl_t;
 
 #define DECL_IMPL(te) text_edit_impl_t* impl = (text_edit_impl_t*)(te)
+
+static ret_t text_edit_calc_x(text_edit_t* text_edit, row_info_t* iter);
 
 static ret_t widget_get_text_layout_info(widget_t* widget, text_layout_info_t* info) {
   value_t v;
@@ -190,6 +195,18 @@ static ret_t text_edit_set_caret_pos(text_edit_impl_t* impl, uint32_t x, uint32_
   return RET_OK;
 }
 
+static uint32_t text_edit_measure_text(canvas_t* c, wchar_t* str, wchar_t mask_char, uint32_t size) {
+  uint32_t w = 0;
+  uint32_t i = 0;
+
+  for(i = 0; i < size; i++) {
+    wchar_t chr = mask_char ? mask_char : str[i];
+    w += canvas_measure_text(c, &chr, 1) + CHAR_SPACING;
+  }
+
+  return w;
+}
+
 static row_info_t* text_edit_single_line_layout_line(text_edit_t* text_edit, uint32_t row_num,
                                          uint32_t offset) {
   uint32_t i = 0;
@@ -203,8 +220,11 @@ static row_info_t* text_edit_single_line_layout_line(text_edit_t* text_edit, uin
   STB_TexteditState* state = &(impl->state);
   row_info_t* row = impl->rows->info + row_num;
   text_layout_info_t* layout_info = &(impl->layout_info);
+  align_h_t align_h = impl->align_h;
 
   memset(row, 0x00, sizeof(row_info_t));
+  
+  row->x = text_edit_calc_x(text_edit, row);
   for (i = offset; i < text->size; i++) {
     wchar_t chr = impl->mask ? impl->mask_char : text->str[i];
     char_w = canvas_measure_text(c, &chr, 1) + CHAR_SPACING; 
@@ -218,6 +238,16 @@ static row_info_t* text_edit_single_line_layout_line(text_edit_t* text_edit, uin
 
   if (i == state->cursor && state->cursor == text->size) {
     text_edit_set_caret_pos(impl, x, y, c->font_size);
+  }
+
+  if(x < layout_info->w) {
+    if(align_h == ALIGN_H_RIGHT) {
+      uint32_t caret_text_x = text_edit_measure_text(c, text->str, 0, state->cursor);
+      uint32_t caret_x = layout_info->w - (x - caret_text_x);
+
+      text_edit_set_caret_pos(impl, caret_x, y, c->font_size);
+    } else if(align_h == ALIGN_H_CENTER) {
+    }
   }
 
   row->text_w = x;
@@ -331,14 +361,15 @@ static void text_edit_layout_for_stb(StbTexteditRow* row, STB_TEXTEDIT_STRING* s
   row_info_t* info = rows_find_by_offset(impl->rows, offset);
 
   if (info != NULL) {
-    row->x1 = info->text_w;
+    row->x0 = info->x;
+    row->x1 = info->x + info->text_w;
     row->num_chars = info->length;
   } else {
+    row->x0 = 0;
     row->x1 = 0;
     row->num_chars = 0;
   }
 
-  row->x0 = 0;
   row->ymin = 0;
   row->ymax = font_size;
   row->baseline_y_delta = font_size * FONT_BASELINE;
@@ -380,6 +411,31 @@ static ret_t text_edit_paint_tips_text(text_edit_t* text_edit) {
   return RET_OK;
 }
 
+static ret_t text_edit_calc_x(text_edit_t* text_edit, row_info_t* iter) {
+  DECL_IMPL(text_edit);
+  canvas_t* c = text_edit->c;
+  widget_t* widget = text_edit->widget;
+  wstr_t* text = &(widget->text);
+  text_layout_info_t* layout_info = &(impl->layout_info);
+
+  uint32_t row_width = canvas_measure_text(c, text->str + iter->offset, iter->length);
+  if(row_width < layout_info->w) {
+    switch(impl->align_h) {
+      case ALIGN_H_CENTER: {
+        return (layout_info->w - row_width)/2;
+      }
+      case ALIGN_H_RIGHT: {
+        return (layout_info->w - row_width);
+      }
+      default: {
+        break;
+      }
+    }
+  }
+
+  return 0;
+}
+
 static ret_t text_edit_paint_real_text(text_edit_t* text_edit) {
   uint32_t i = 0;
   uint32_t x = 0;
@@ -411,10 +467,11 @@ static ret_t text_edit_paint_real_text(text_edit_t* text_edit) {
     uint32_t k = 0;
     row_info_t* iter = rows->info + i;
 
-    x = layout_info->margin_l;
     if(impl->single_line) {
+      x = layout_info->margin_l + text_edit_calc_x(text_edit, iter);    
       y = (layout_info->h - c->font_size)/2 + layout_info->margin_t;
     } else {
+      x = layout_info->margin_l;
       y = i * line_height + layout_info->margin_t;
     }
 
@@ -566,6 +623,7 @@ text_edit_t* text_edit_create(widget_t* widget, bool_t single_line) {
   impl = TKMEM_ZALLOC(text_edit_impl_t);
   return_value_if_fail(impl != NULL, NULL);
 
+  impl->align_h = ALIGN_H_RIGHT;
   impl->wrap_word = !single_line;
   impl->text_edit.widget = widget;
   impl->single_line = single_line;
