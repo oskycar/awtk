@@ -81,12 +81,15 @@ typedef struct _text_edit_impl_t {
   wchar_t mask_char;
   bool_t mask;
   wstr_t tips;
-  align_h_t align_h;
 } text_edit_impl_t;
 
 #define DECL_IMPL(te) text_edit_impl_t* impl = (text_edit_impl_t*)(te)
 
 static ret_t text_edit_calc_x(text_edit_t* text_edit, row_info_t* iter);
+
+static align_h_t widget_get_text_align_h(widget_t* widget) {
+  return (align_h_t)style_get_int(widget->astyle, STYLE_ID_TEXT_ALIGN_H, ALIGN_H_LEFT);
+}
 
 static ret_t widget_get_text_layout_info(widget_t* widget, text_layout_info_t* info) {
   value_t v;
@@ -195,12 +198,14 @@ static ret_t text_edit_set_caret_pos(text_edit_impl_t* impl, uint32_t x, uint32_
   return RET_OK;
 }
 
-static uint32_t text_edit_measure_text(canvas_t* c, wchar_t* str, wchar_t mask_char, uint32_t size) {
-  uint32_t w = 0;
+static uint32_t text_edit_measure_text(canvas_t* c, wchar_t* str, wchar_t mask_char,
+                                       uint32_t size) {
   uint32_t i = 0;
+  uint32_t w = 0;
 
-  for(i = 0; i < size; i++) {
+  for (i = 0; i < size; i++) {
     wchar_t chr = mask_char ? mask_char : str[i];
+
     w += canvas_measure_text(c, &chr, 1) + CHAR_SPACING;
   }
 
@@ -208,58 +213,47 @@ static uint32_t text_edit_measure_text(canvas_t* c, wchar_t* str, wchar_t mask_c
 }
 
 static row_info_t* text_edit_single_line_layout_line(text_edit_t* text_edit, uint32_t row_num,
-                                         uint32_t offset) {
-  uint32_t i = 0;
-  uint32_t x = 0;
+                                                     uint32_t offset) {
   uint32_t y = 0;
   uint32_t char_w = 0;
+  uint32_t caret_x = 0;
   DECL_IMPL(text_edit);
   rows_t* rows = impl->rows;
   canvas_t* c = text_edit->c;
   wstr_t* text = &(text_edit->widget->text);
   STB_TexteditState* state = &(impl->state);
   row_info_t* row = impl->rows->info + row_num;
+  wchar_t mask_char = impl->mask ? impl->mask_char : 0;
   text_layout_info_t* layout_info = &(impl->layout_info);
-  align_h_t align_h = impl->align_h;
+  align_h_t align_h = widget_get_text_align_h(text_edit->widget);
+  uint32_t text_w = text_edit_measure_text(c, text->str, mask_char, text->size);
+  uint32_t caret_text_w = text_edit_measure_text(c, text->str, mask_char, state->cursor);
 
+  assert(offset == 0 && row_num == 0);
   memset(row, 0x00, sizeof(row_info_t));
-  
+
+  row->offset = 0;
+  row->text_w = text_w;
+  row->length = text->size;
   row->x = text_edit_calc_x(text_edit, row);
-  for (i = offset; i < text->size; i++) {
-    wchar_t chr = impl->mask ? impl->mask_char : text->str[i];
-    char_w = canvas_measure_text(c, &chr, 1) + CHAR_SPACING; 
-
-    if (i == state->cursor) {
-      text_edit_set_caret_pos(impl, x, y, c->font_size);
-    }
-
-    x += char_w;
-  }
-
-  if (i == state->cursor && state->cursor == text->size) {
-    text_edit_set_caret_pos(impl, x, y, c->font_size);
-  }
-
-  if(x < layout_info->w) {
-    if(align_h == ALIGN_H_RIGHT) {
-      uint32_t caret_text_x = text_edit_measure_text(c, text->str, 0, state->cursor);
-      uint32_t caret_x = layout_info->w - (x - caret_text_x);
-
-      text_edit_set_caret_pos(impl, caret_x, y, c->font_size);
-    } else if(align_h == ALIGN_H_CENTER) {
-    }
-  }
-
-  row->text_w = x;
-  row->offset = offset;
-  row->length = i - offset;
   layout_info->virtual_h = tk_max(y, layout_info->widget_h);
+
+  caret_x = caret_text_w;
+  if (text_w < layout_info->w) {
+    layout_info->ox = 0;
+    if (align_h == ALIGN_H_RIGHT) {
+      caret_x = layout_info->w - (text_w - caret_text_w);
+    } else if (align_h == ALIGN_H_CENTER) {
+      caret_x = (layout_info->w - text_w) / 2 + caret_text_w;
+    }
+  }
+  text_edit_set_caret_pos(impl, caret_x, y, c->font_size);
 
   return row;
 }
 
 static row_info_t* text_edit_multi_line_layout_line(text_edit_t* text_edit, uint32_t row_num,
-                                         uint32_t offset) {
+                                                    uint32_t offset) {
   uint32_t i = 0;
   uint32_t x = 0;
   DECL_IMPL(text_edit);
@@ -275,30 +269,30 @@ static row_info_t* text_edit_multi_line_layout_line(text_edit_t* text_edit, uint
   memset(row, 0x00, sizeof(row_info_t));
   for (i = offset; i < text->size; i++) {
     wchar_t* p = text->str + i;
-    break_type_t word_break= LINE_BREAK_NO;
-    break_type_t line_break= LINE_BREAK_NO;
-    uint32_t char_w = canvas_measure_text(c, p, 1) + CHAR_SPACING; 
-    uint32_t next_char_w = canvas_measure_text(c, p+1, 1) + CHAR_SPACING; 
+    break_type_t word_break = LINE_BREAK_NO;
+    break_type_t line_break = LINE_BREAK_NO;
+    uint32_t char_w = canvas_measure_text(c, p, 1) + CHAR_SPACING;
+    uint32_t next_char_w = canvas_measure_text(c, p + 1, 1) + CHAR_SPACING;
 
     if (i == state->cursor) {
       text_edit_set_caret_pos(impl, x, y, c->font_size);
     }
 
     line_break = line_break_check(*p, p[1]);
-    if(line_break== LINE_BREAK_MUST) {
+    if (line_break == LINE_BREAK_MUST) {
       i++;
       break;
-    } 
-    
+    }
+
     word_break = word_break_check(*p, p[1]);
-    if((x + char_w) > layout_info->w) {
+    if ((x + char_w) > layout_info->w) {
       break;
-    } else if((x + char_w + next_char_w) >= layout_info->w) {
-      if(line_break == LINE_BREAK_NO || word_break == LINE_BREAK_NO) {
+    } else if ((x + char_w + next_char_w) >= layout_info->w) {
+      if (line_break == LINE_BREAK_NO || word_break == LINE_BREAK_NO) {
         break;
       }
     }
-        
+
     x += char_w;
   }
 
@@ -317,13 +311,12 @@ static row_info_t* text_edit_multi_line_layout_line(text_edit_t* text_edit, uint
 static row_info_t* text_edit_layout_line(text_edit_t* text_edit, uint32_t row_num,
                                          uint32_t offset) {
   DECL_IMPL(text_edit);
-  if(impl->single_line) {
+  if (impl->single_line) {
     return text_edit_single_line_layout_line(text_edit, row_num, offset);
   } else {
     return text_edit_multi_line_layout_line(text_edit, row_num, offset);
   }
 }
-
 
 ret_t text_edit_layout(text_edit_t* text_edit) {
   uint32_t i = 0;
@@ -333,13 +326,15 @@ ret_t text_edit_layout(text_edit_t* text_edit) {
   uint32_t size = text_edit->widget->text.size;
   text_layout_info_t* layout_info = &(impl->layout_info);
 
-  impl->rows->size = 0;
   impl->caret.x = 0;
   impl->caret.y = 0;
+  impl->rows->size = 0;
+
   if (text_edit->c == NULL) {
     return RET_OK;
   }
 
+  widget_prepare_text_style(text_edit->widget, text_edit->c);
   widget_get_text_layout_info(text_edit->widget, layout_info);
   while (offset < size && i < max_rows) {
     row_info_t* iter = text_edit_layout_line(text_edit, i, offset);
@@ -373,40 +368,42 @@ static void text_edit_layout_for_stb(StbTexteditRow* row, STB_TEXTEDIT_STRING* s
   row->ymin = 0;
   row->ymax = font_size;
   row->baseline_y_delta = font_size * FONT_BASELINE;
+
+  return;
 }
 
-static ret_t text_edit_paint_caret(text_edit_t* text_edit) {
+static ret_t text_edit_paint_caret(text_edit_t* text_edit, canvas_t* c) {
   DECL_IMPL(text_edit);
-  canvas_t* c = text_edit->c;
-  widget_t* widget = text_edit->widget;
   color_t caret_color = color_init(0, 0xff, 0, 0xff);
   text_layout_info_t* layout_info = &(impl->layout_info);
-  uint32_t oy = (layout_info->h - c->font_size)/2;
-  uint32_t x = layout_info->margin_l + impl->caret.x;
-  uint32_t y = (impl->single_line ? oy : 0)  + layout_info->margin_t + impl->caret.y;
-  uint32_t rx = x - layout_info->ox;
-  uint32_t ry = y - layout_info->oy;
+  uint32_t x = layout_info->margin_l + impl->caret.x - layout_info->ox;
+  uint32_t y = layout_info->margin_t + impl->caret.y - layout_info->oy;
+
+  if (impl->single_line) {
+    y += (layout_info->h - c->font_size) / 2;
+    ;
+  }
 
   canvas_set_stroke_color(c, caret_color);
-  canvas_draw_vline(c, rx, ry, c->font_size);
+  canvas_draw_vline(c, x, y, c->font_size);
 
   return RET_OK;
 }
 
-static ret_t text_edit_paint_tips_text(text_edit_t* text_edit) {
-  uint32_t i = 0;
+static ret_t text_edit_paint_tips_text(text_edit_t* text_edit, canvas_t* c) {
   uint32_t x = 0;
   uint32_t y = 0;
   DECL_IMPL(text_edit);
-  canvas_t* c = text_edit->c;
   wstr_t* text = &(impl->tips);
   widget_t* widget = text_edit->widget;
   text_layout_info_t* layout_info = &(impl->layout_info);
-  
-  x = layout_info->margin_l;
-  y = (layout_info->h - c->font_size)/2 + layout_info->margin_t;
 
-  canvas_draw_text(c, text->str, text->size, x, y);
+  x = layout_info->margin_l;
+  y = (layout_info->h - c->font_size) / 2 + layout_info->margin_t;
+
+  if(text->size > 0) {
+    canvas_draw_text(c, text->str, text->size, x, y);
+  }
 
   return RET_OK;
 }
@@ -417,64 +414,109 @@ static ret_t text_edit_calc_x(text_edit_t* text_edit, row_info_t* iter) {
   widget_t* widget = text_edit->widget;
   wstr_t* text = &(widget->text);
   text_layout_info_t* layout_info = &(impl->layout_info);
+  align_h_t align_h = widget_get_text_align_h(text_edit->widget);
 
-  uint32_t row_width = canvas_measure_text(c, text->str + iter->offset, iter->length);
-  if(row_width < layout_info->w) {
-    switch(impl->align_h) {
+  uint32_t row_width = text_edit_measure_text(c, text->str + iter->offset, 0, iter->length);
+  if (row_width < layout_info->w) {
+    switch (align_h) {
       case ALIGN_H_CENTER: {
-        return (layout_info->w - row_width)/2;
+        return (layout_info->w - row_width) / 2;
       }
       case ALIGN_H_RIGHT: {
         return (layout_info->w - row_width);
       }
-      default: {
-        break;
-      }
+      default: { break; }
     }
   }
 
   return 0;
 }
 
-static ret_t text_edit_paint_real_text(text_edit_t* text_edit) {
-  uint32_t i = 0;
+static ret_t text_edit_paint_line(text_edit_t* text_edit, canvas_t* c, row_info_t* iter,
+                                  uint32_t y) {
   uint32_t x = 0;
+  uint32_t k = 0;
+  widget_t* widget = text_edit->widget;
+
+  DECL_IMPL(text_edit);
+  wstr_t* text = &(widget->text);
+  style_t* style = widget->astyle;
+  STB_TexteditState* state = &(impl->state);
+  text_layout_info_t* layout_info = &(impl->layout_info);
+  uint32_t view_left = layout_info->ox + layout_info->margin_l;
+  uint32_t view_right = layout_info->ox + layout_info->margin_l + layout_info->w;
+
+  color_t black = color_init(0, 0, 0, 0xff);
+  color_t white = color_init(0xf0, 0xf0, 0xf0, 0xff);
+
+  if (impl->single_line) {
+    x = layout_info->margin_l + text_edit_calc_x(text_edit, iter);
+  } else {
+    x = layout_info->margin_l;
+  }
+
+  for (k = 0; k < iter->length; k++) {
+    uint32_t offset = iter->offset + k;
+    wchar_t chr = impl->mask ? impl->mask_char : text->str[offset];
+    uint32_t char_w = canvas_measure_text(c, &chr, 1);
+
+    if ((x + char_w) < view_left) {
+      x += char_w + CHAR_SPACING;
+      continue;
+    }
+
+    if (x > view_right) {
+      break;
+    }
+
+    if (chr != STB_TEXTEDIT_NEWLINE) {
+      uint32_t rx = x - layout_info->ox;
+      uint32_t ry = y - layout_info->oy;
+
+      if (offset >= state->select_start && offset < state->select_end) {
+        color_t select_bg_color = style_get_color(style, STYLE_ID_SELECTED_BG_COLOR, white);
+        color_t select_text_color = style_get_color(style, STYLE_ID_SELECTED_TEXT_COLOR, black);
+
+        canvas_set_fill_color(c, select_bg_color);
+        canvas_fill_rect(c, rx, ry, char_w + CHAR_SPACING, c->font_size);
+
+        canvas_set_text_color(c, select_text_color);
+      } else {
+        color_t text_color = style_get_color(style, STYLE_ID_TEXT_COLOR, black);
+        canvas_set_text_color(c, text_color);
+      }
+
+      canvas_draw_text(c, &chr, 1, rx, ry);
+      x += char_w + CHAR_SPACING;
+    }
+  }
+
+  return RET_OK;
+}
+
+static ret_t text_edit_paint_real_text(text_edit_t* text_edit, canvas_t* c) {
+  uint32_t i = 0;
   uint32_t y = 0;
-  canvas_t* c = text_edit->c;
   widget_t* widget = text_edit->widget;
 
   DECL_IMPL(text_edit);
   rows_t* rows = impl->rows;
   wstr_t* text = &(widget->text);
-  style_t* style = widget->astyle;
   STB_TexteditState* state = &(impl->state);
-  color_t black = color_init(0, 0, 0, 0xff);
-  color_t white = color_init(0xf0, 0xf0, 0xf0, 0xff);
-
-  color_t text_color = style_get_color(style, STYLE_ID_TEXT_COLOR, black);
-  color_t select_bg_color = style_get_color(style, STYLE_ID_SELECTED_BG_COLOR, white);
-  color_t select_text_color = style_get_color(style, STYLE_ID_SELECTED_TEXT_COLOR, black);
-
   uint32_t line_height = c->font_size * FONT_BASELINE;
   text_layout_info_t* layout_info = &(impl->layout_info);
-
   uint32_t view_top = layout_info->oy + layout_info->margin_t;
   uint32_t view_bottom = layout_info->oy + layout_info->margin_t + layout_info->h;
-  uint32_t view_left = layout_info->ox + layout_info->margin_l;
-  uint32_t view_right = layout_info->ox + layout_info->margin_l + layout_info->w;
 
   for (i = 0; i < rows->size; i++) {
     uint32_t k = 0;
     row_info_t* iter = rows->info + i;
 
-    if(impl->single_line) {
-      x = layout_info->margin_l + text_edit_calc_x(text_edit, iter);    
-      y = (layout_info->h - c->font_size)/2 + layout_info->margin_t;
+    if (impl->single_line) {
+      y = (layout_info->h - c->font_size) / 2 + layout_info->margin_t;
     } else {
-      x = layout_info->margin_l;
       y = i * line_height + layout_info->margin_t;
     }
-
 
     if ((y + c->font_size) < view_top) {
       continue;
@@ -484,55 +526,24 @@ static ret_t text_edit_paint_real_text(text_edit_t* text_edit) {
       break;
     }
 
-    for (k = 0; k < iter->length; k++) {
-      uint32_t offset = iter->offset + k;
-      wchar_t chr = impl->mask ? impl->mask_char : text->str[offset];
-      uint32_t char_w = canvas_measure_text(c, &chr, 1);
-
-      if ((x + char_w) < view_left) {
-        x += char_w + CHAR_SPACING;
-        continue;
-      }
-
-      if (x > view_right) {
-        break;
-      }
-
-      if (chr != STB_TEXTEDIT_NEWLINE) {
-        uint32_t rx = x - layout_info->ox;
-        uint32_t ry = y - layout_info->oy;
-
-        if (offset >= state->select_start && offset < state->select_end) {
-          canvas_set_fill_color(c, select_bg_color);
-          canvas_fill_rect(c, rx, ry, char_w + CHAR_SPACING, c->font_size);
-
-          canvas_set_text_color(c, select_text_color);
-        } else {
-          canvas_set_text_color(c, text_color);
-        }
-
-        canvas_draw_text(c, &chr, 1, rx, ry);
-        x += char_w + CHAR_SPACING;
-      }
-    }
+    text_edit_paint_line(text_edit, c, iter, y);
   }
 
   return RET_OK;
 }
 
-static ret_t text_edit_paint_text(text_edit_t* text_edit) {
+static ret_t text_edit_paint_text(text_edit_t* text_edit, canvas_t* c) {
   widget_t* widget = text_edit->widget;
-  if(widget->text.size > 0) {
-    return text_edit_paint_real_text(text_edit);
+
+  if (widget->text.size > 0) {
+    return text_edit_paint_real_text(text_edit, c);
   } else {
-    return text_edit_paint_tips_text(text_edit);
+    return text_edit_paint_tips_text(text_edit, c);
   }
 }
 
 ret_t text_edit_paint(text_edit_t* text_edit, canvas_t* c) {
   return_value_if_fail(text_edit != NULL && c != NULL, RET_BAD_PARAMS);
-
-  widget_prepare_text_style(text_edit->widget, c);
 
   if (text_edit->c != NULL) {
     text_edit->c = c;
@@ -541,20 +552,13 @@ ret_t text_edit_paint(text_edit_t* text_edit, canvas_t* c) {
     text_edit_layout(text_edit);
   }
 
-  if (text_edit_paint_text(text_edit) == RET_OK) {
+  widget_prepare_text_style(text_edit->widget, c);
+  if (text_edit_paint_text(text_edit, c) == RET_OK) {
     DECL_IMPL(text_edit);
     STB_TexteditState* state = &(impl->state);
-    text_layout_info_t* layout_info = &(impl->layout_info);
-/*
-    canvas_draw_hline(c, layout_info->margin_l, layout_info->margin_t, layout_info->w);
-    canvas_draw_hline(c, layout_info->margin_l, layout_info->margin_t + layout_info->h,
-                      layout_info->w);
-    canvas_draw_vline(c, layout_info->margin_l, layout_info->margin_t, layout_info->h);
-    canvas_draw_vline(c, layout_info->margin_l + layout_info->w, layout_info->margin_t,
-                      layout_info->h);
-*/
+
     if (state->select_start == state->select_end && impl->caret_visible) {
-      text_edit_paint_caret(text_edit);
+      text_edit_paint_caret(text_edit, c);
     }
   }
 
@@ -571,7 +575,7 @@ static int text_edit_remove(STB_TEXTEDIT_STRING* str, int pos, int num) {
 static int text_edit_get_char_width(STB_TEXTEDIT_STRING* str, int pos, int offset) {
   wstr_t* text = &(str->widget->text);
 
-  return canvas_measure_text(str->c, text->str + pos + offset, 1) + 1;
+  return canvas_measure_text(str->c, text->str + pos + offset, 1) + CHAR_SPACING;
 }
 
 static int text_edit_insert(STB_TEXTEDIT_STRING* str, int pos, STB_TEXTEDIT_CHARTYPE* newtext,
@@ -623,11 +627,11 @@ text_edit_t* text_edit_create(widget_t* widget, bool_t single_line) {
   impl = TKMEM_ZALLOC(text_edit_impl_t);
   return_value_if_fail(impl != NULL, NULL);
 
-  impl->align_h = ALIGN_H_RIGHT;
   impl->wrap_word = !single_line;
   impl->text_edit.widget = widget;
   impl->single_line = single_line;
 
+  wstr_init(&(impl->tips), 0);
   stb_textedit_initialize_state(&(impl->state), single_line);
   if (!single_line) {
     text_edit_set_max_rows((text_edit_t*)impl, 100);
@@ -635,7 +639,6 @@ text_edit_t* text_edit_create(widget_t* widget, bool_t single_line) {
     text_edit_set_max_rows((text_edit_t*)impl, 1);
   }
 
-  wstr_init(&(impl->tips), 0);
   return (text_edit_t*)impl;
 }
 
@@ -683,12 +686,11 @@ ret_t text_edit_set_canvas(text_edit_t* text_edit, canvas_t* canvas) {
 }
 
 static point_t text_edit_normalize_point(text_edit_t* text_edit, xy_t x, xy_t y) {
-  point_t point = {x, y};
   DECL_IMPL(text_edit);
+  point_t point = {x, y};
   text_layout_info_t* layout_info = &(impl->layout_info);
 
-  widget_t* widget = text_edit->widget;
-  widget_to_local(widget, &point);
+  widget_to_local(text_edit->widget, &point);
 
   point.x = point.x - layout_info->margin_l + layout_info->ox;
   point.y = point.y - layout_info->margin_t + layout_info->oy;
@@ -702,7 +704,6 @@ ret_t text_edit_click(text_edit_t* text_edit, xy_t x, xy_t y) {
   return_value_if_fail(impl != NULL, RET_BAD_PARAMS);
 
   point = text_edit_normalize_point(text_edit, x, y);
-  widget_prepare_text_style(text_edit->widget, text_edit->c);
   stb_textedit_click(text_edit, &(impl->state), point.x, point.y);
   text_edit_layout(text_edit);
 
@@ -715,7 +716,6 @@ ret_t text_edit_drag(text_edit_t* text_edit, xy_t x, xy_t y) {
   return_value_if_fail(impl != NULL, RET_BAD_PARAMS);
 
   point = text_edit_normalize_point(text_edit, x, y);
-  widget_prepare_text_style(text_edit->widget, text_edit->c);
   stb_textedit_drag(text_edit, &(impl->state), point.x, point.y);
   text_edit_layout(text_edit);
 
@@ -836,6 +836,7 @@ ret_t text_edit_key_down(text_edit_t* text_edit, key_event_t* evt) {
     }
 
     text_edit_layout(text_edit);
+
     return RET_OK;
   }
 
@@ -866,7 +867,7 @@ ret_t text_edit_set_cursor(text_edit_t* text_edit, uint32_t cursor) {
 
   text = &(text_edit->widget->text);
 
-  if(cursor > text->size) {
+  if (cursor > text->size) {
     cursor = text->size;
   }
 
@@ -883,7 +884,6 @@ uint32_t text_edit_get_cursor(text_edit_t* text_edit) {
   return impl->state.cursor;
 }
 
-
 ret_t text_edit_set_wrap_word(text_edit_t* text_edit, bool_t wrap_word) {
   DECL_IMPL(text_edit);
   return_value_if_fail(text_edit != NULL, RET_BAD_PARAMS);
@@ -899,6 +899,7 @@ ret_t text_edit_set_mask(text_edit_t* text_edit, bool_t mask) {
   return_value_if_fail(text_edit != NULL, RET_BAD_PARAMS);
 
   impl->mask = mask;
+  text_edit_layout(text_edit);
 
   return RET_OK;
 }
@@ -908,6 +909,7 @@ ret_t text_edit_set_tips(text_edit_t* text_edit, const char* tips) {
   return_value_if_fail(text_edit != NULL, RET_BAD_PARAMS);
 
   wstr_set_utf8(&(impl->tips), tips);
+  text_edit_layout(text_edit);
 
   return RET_OK;
 }
@@ -917,15 +919,7 @@ ret_t text_edit_set_mask_char(text_edit_t* text_edit, wchar_t mask_char) {
   return_value_if_fail(text_edit != NULL, RET_BAD_PARAMS);
 
   impl->mask_char = mask_char;
-
-  return RET_OK;
-}
-
-ret_t text_edit_set_align_h(text_edit_t* text_edit, align_h_t align_h) {
-  DECL_IMPL(text_edit);
-  return_value_if_fail(text_edit != NULL, RET_BAD_PARAMS);
-
-  impl->align_h = align_h;
+  text_edit_layout(text_edit);
 
   return RET_OK;
 }

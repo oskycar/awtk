@@ -138,7 +138,6 @@ ret_t text_edit_set_max_rows(text_edit_t* text_edit, uint32_t max_rows);
 ret_t text_edit_set_mask(text_edit_t* text_edit, bool_t mask);
 ret_t text_edit_set_tips(text_edit_t* text_edit, const char* tips);
 ret_t text_edit_set_mask_char(text_edit_t* text_edit, wchar_t mask_char);
-ret_t text_edit_set_align_h(text_edit_t* text_edit, align_h_t align_h);
 
 /**
  * @method text_edit_paint

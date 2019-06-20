@@ -1,3 +1,7 @@
 <window anim_hint="htranslate" >
-  <mledit x="10" y="20" w="300" h="200" text="hello" />
+ <edit x="c" y="m" h="30" w="70%" right_margin="16" tips="uint(0-150) auto_fix" 
+   input_type="int" min="0" max="150" step="1" auto_fix="true" style="number" focus="true">
+        <button name="inc" repeat="300" style="spinbox_up" x="right" y="0" w="15" h="50%" />
+        <button name="dec" repeat="300" style="spinbox_down" x="right" y="bottom" w="15" h="50%" />
+      </edit>
 </window>
