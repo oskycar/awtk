@@ -391,18 +391,18 @@ static ret_t text_edit_paint_caret(text_edit_t* text_edit, canvas_t* c) {
 }
 
 static ret_t text_edit_paint_tips_text(text_edit_t* text_edit, canvas_t* c) {
-  uint32_t x = 0;
-  uint32_t y = 0;
   DECL_IMPL(text_edit);
   wstr_t* text = &(impl->tips);
-  widget_t* widget = text_edit->widget;
   text_layout_info_t* layout_info = &(impl->layout_info);
 
-  x = layout_info->margin_l;
-  y = (layout_info->h - c->font_size) / 2 + layout_info->margin_t;
-
   if(text->size > 0) {
-    canvas_draw_text(c, text->str, text->size, x, y);
+/*    
+    uint32_t x = layout_info->margin_l;
+    uint32_t y = (layout_info->h - c->font_size) / 2 + layout_info->margin_t;
+    canvas_draw_text_in_rect(c, text->str, text->size, &r);
+*/
+    rect_t r = rect_init(layout_info->margin_l, layout_info->margin_t, layout_info->w, layout_info->h);
+    canvas_draw_text_in_rect(c, text->str, text->size, &r);
   }
 
   return RET_OK;
