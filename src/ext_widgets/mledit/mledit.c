@@ -56,12 +56,33 @@ ret_t mledit_set_focus(widget_t* widget, bool_t focus) {
   return RET_OK;
 }
 
+ret_t mledit_set_readonly(widget_t* widget, bool_t readonly) {
+  mledit_t* mledit = MLEDIT(widget);
+  return_value_if_fail(mledit != NULL, RET_BAD_PARAMS);
+
+  mledit->readonly = readonly;
+
+  return RET_OK;
+}
+
+ret_t mledit_set_wrap_word(widget_t* widget, bool_t wrap_word) {
+  mledit_t* mledit = MLEDIT(widget);
+  return_value_if_fail(mledit != NULL, RET_BAD_PARAMS);
+
+  mledit->wrap_word = wrap_word;
+  text_edit_set_wrap_word(mledit->model, wrap_word);
+
+  return RET_OK;
+}
 
 static ret_t mledit_get_prop(widget_t* widget, const char* name, value_t* v) {
   mledit_t* mledit = MLEDIT(widget);
   return_value_if_fail(mledit != NULL && name != NULL && v != NULL, RET_BAD_PARAMS);
   if (tk_str_eq(name, WIDGET_PROP_READONLY)) {
     value_set_bool(v, mledit->readonly);
+    return RET_OK;
+  } else if (tk_str_eq(name, MLEDIT_PROP_WRAP_WORD)) {
+    value_set_bool(v, mledit->wrap_word);
     return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_LEFT_MARGIN)) {
     value_set_int(v, mledit->left_margin);
@@ -101,6 +122,9 @@ static ret_t mledit_set_prop(widget_t* widget, const char* name, const value_t* 
     text_edit_set_cursor(mledit->model, widget->text.size);
   } else if (tk_str_eq(name, WIDGET_PROP_READONLY)) {
     mledit->readonly = value_bool(v);
+    return RET_OK;
+  } else if (tk_str_eq(name, MLEDIT_PROP_WRAP_WORD)) {
+    mledit_set_wrap_word(widget, value_bool(v));
     return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_MARGIN)) {
     int margin = value_int(v);

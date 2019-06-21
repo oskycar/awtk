@@ -101,6 +101,13 @@ typedef struct _mledit_t {
    * 设置为焦点(通常用于在XML中缺省设置为焦点控件)。
    */
   bool_t focus;
+  
+  /**
+   * @property {bool_t} wrap_word
+   * @annotation ["set_prop","get_prop","readable","persitent","design","scriptable"]
+   * 是否自动折行。
+   */
+  bool_t wrap_word;
 
   /*private*/
   text_edit_t* model;
@@ -133,6 +140,17 @@ widget_t* mledit_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h);
 ret_t mledit_set_readonly(widget_t* widget, bool_t readonly);
 
 /**
+ * @method mledit_set_wrap_word
+ * 设置编辑器是否自动折行。
+ * @annotation ["scriptable"]
+ * @param {widget_t*} widget widget对象。
+ * @param {bool_t} wrap_word 是否自动折行。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t mledit_set_wrap_word(widget_t* widget, bool_t wrap_word);
+
+/**
  * @method mledit_set_input_tips
  * 设置编辑器的输入提示。
  * @annotation ["scriptable"]
@@ -155,6 +173,7 @@ widget_t* mledit_cast(widget_t* widget);
 
 #define WIDGET_TYPE_MLEDIT "mledit"
 
+#define MLEDIT_PROP_WRAP_WORD "wrap_word"
 #define MLEDIT(widget) ((mledit_t*)(mledit_cast(WIDGET(widget))))
 
 /*public for subclass and runtime type check*/

@@ -264,6 +264,8 @@ static row_info_t* text_edit_multi_line_layout_line(text_edit_t* text_edit, uint
   row_info_t* row = impl->rows->info + row_num;
   uint32_t line_height = c->font_size * FONT_BASELINE;
   uint32_t y = line_height * row_num;
+  uint32_t last_breakable_i = 0;
+  uint32_t last_breakable_x = 0;
   text_layout_info_t* layout_info = &(impl->layout_info);
 
   memset(row, 0x00, sizeof(row_info_t));
@@ -284,11 +286,16 @@ static row_info_t* text_edit_multi_line_layout_line(text_edit_t* text_edit, uint
       break;
     }
 
-    word_break = word_break_check(*p, p[1]);
-    if ((x + char_w) > layout_info->w) {
-      break;
-    } else if ((x + char_w + next_char_w) >= layout_info->w) {
-      if (line_break == LINE_BREAK_NO || word_break == LINE_BREAK_NO) {
+    if(impl->wrap_word) {
+      word_break = word_break_check(*p, p[1]);
+      if(word_break == LINE_BREAK_ALLOW && line_break == LINE_BREAK_ALLOW) {
+        last_breakable_x = x;
+        last_breakable_i = i;
+      }
+
+      if ((x + char_w) > layout_info->w) {
+        i = last_breakable_i;
+        x = last_breakable_x;
         break;
       }
     }
@@ -336,7 +343,7 @@ ret_t text_edit_layout(text_edit_t* text_edit) {
 
   widget_prepare_text_style(text_edit->widget, text_edit->c);
   widget_get_text_layout_info(text_edit->widget, layout_info);
-  while (offset <= size && i < max_rows) {
+  while ((offset < size || size == 0) && i < max_rows) {
     row_info_t* iter = text_edit_layout_line(text_edit, i, offset);
     if (iter == NULL || iter->length == 0) {
       break;
