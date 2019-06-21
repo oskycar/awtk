@@ -13,7 +13,7 @@ TEST(TextEdit, basic) {
   widget_set_text(w, L"hello");
   ASSERT_EQ(text_edit_set_select(text_edit, 1, 2), RET_OK);
   ASSERT_EQ(text_edit_paste(text_edit, L"123", 3), RET_OK);
- 
+
   str_init(&str, 0);
   str_from_wstr(&str, w->text.str);
   ASSERT_STREQ(str.str, "h123llo");

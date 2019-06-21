@@ -356,27 +356,27 @@ TEST(WStr, normalize_newline) {
   ASSERT_EQ(wstr_normalize_newline(&wstr, '\n'), RET_OK);
   str_from_wstr(&str, wstr.str);
   ASSERT_STREQ(str.str, "a\nb");
-  
+
   wstr_set(&wstr, L"a\r\nb");
   ASSERT_EQ(wstr_normalize_newline(&wstr, '\n'), RET_OK);
   str_from_wstr(&str, wstr.str);
   ASSERT_STREQ(str.str, "a\nb");
-  
+
   wstr_set(&wstr, L"a\rb");
   ASSERT_EQ(wstr_normalize_newline(&wstr, '\n'), RET_OK);
   str_from_wstr(&str, wstr.str);
   ASSERT_STREQ(str.str, "a\nb");
-  
+
   wstr_set(&wstr, L"a\rb");
   ASSERT_EQ(wstr_normalize_newline(&wstr, ' '), RET_OK);
   str_from_wstr(&str, wstr.str);
   ASSERT_STREQ(str.str, "a b");
-  
+
   wstr_set(&wstr, L"a\rb\r\r");
   ASSERT_EQ(wstr_normalize_newline(&wstr, '\n'), RET_OK);
   str_from_wstr(&str, wstr.str);
   ASSERT_STREQ(str.str, "a\nb\n\n");
-  
+
   wstr_set(&wstr, L"a\r\nb\r\n\r\n");
   ASSERT_EQ(wstr_normalize_newline(&wstr, '\n'), RET_OK);
   str_from_wstr(&str, wstr.str);

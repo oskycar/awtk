@@ -199,7 +199,7 @@ typedef struct _edit_t {
   uint32_t idle_id;
   uint32_t timer_id;
   input_limit_t limit;
-  text_edit_t*  model;
+  text_edit_t* model;
 } edit_t;
 
 /**

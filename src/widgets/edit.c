@@ -67,7 +67,6 @@ ret_t edit_on_paint_self(widget_t* widget, canvas_t* c) {
   return text_edit_paint(EDIT(widget)->model, c);
 }
 
-
 static ret_t edit_do_input_char(widget_t* widget, wchar_t c) {
   return text_edit_paste(EDIT(widget)->model, &c, 1);
 }
@@ -192,7 +191,6 @@ static bool_t edit_is_number(widget_t* widget) {
   return input_type == INPUT_UINT || input_type == INPUT_INT || input_type == INPUT_FLOAT ||
          input_type == INPUT_UFLOAT || input_type == INPUT_HEX;
 }
-
 
 bool_t edit_is_valid_value(widget_t* widget) {
   wstr_t* text = NULL;
@@ -382,7 +380,7 @@ static ret_t edit_paste(widget_t* widget) {
     wstr_from_value(&str, &v);
     wstr_normalize_newline(&str, ' ');
 
-    for(i = 0; i < str.size; i++) {
+    for (i = 0; i < str.size; i++) {
       edit_input_char(widget, str.str[i]);
     }
 
@@ -393,10 +391,10 @@ static ret_t edit_paste(widget_t* widget) {
 }
 
 static ret_t edit_on_key_down(widget_t* widget, key_event_t* e) {
- uint32_t key = e->key;
- edit_t* edit = EDIT(widget);
+  uint32_t key = e->key;
+  edit_t* edit = EDIT(widget);
 
- if (key == TK_KEY_TAB) {
+  if (key == TK_KEY_TAB) {
     return RET_OK;
   } else if (key == TK_KEY_DOWN) {
     if (!edit_is_number(widget)) {
@@ -416,25 +414,16 @@ static ret_t edit_on_key_down(widget_t* widget, key_event_t* e) {
     return RET_OK;
   }
 
-  if(key == TK_KEY_BACKSPACE 
-    || key == TK_KEY_DELETE 
-    || key == TK_KEY_LEFT 
-    || key == TK_KEY_RIGHT
-    || key == TK_KEY_HOME
-    || key == TK_KEY_END
-    || ((e->ctrl || e->cmd) && (key == TK_KEY_a 
-      || key == TK_KEY_y 
-      || key == TK_KEY_z 
-      || key == TK_KEY_v
-      || key == TK_KEY_x 
-      || key == TK_KEY_c))
-    ) {
-      if(key == TK_KEY_v) {
-        edit_paste(widget);
-      } else {
-        return text_edit_key_down(edit->model, (key_event_t*)e);
-      }
-  } else if(system_info()->app_type != APP_DESKTOP && key < 128 && isprint(key)) {
+  if (key == TK_KEY_BACKSPACE || key == TK_KEY_DELETE || key == TK_KEY_LEFT ||
+      key == TK_KEY_RIGHT || key == TK_KEY_HOME || key == TK_KEY_END ||
+      ((e->ctrl || e->cmd) && (key == TK_KEY_a || key == TK_KEY_y || key == TK_KEY_z ||
+                               key == TK_KEY_v || key == TK_KEY_x || key == TK_KEY_c))) {
+    if (key == TK_KEY_v) {
+      edit_paste(widget);
+    } else {
+      return text_edit_key_down(edit->model, (key_event_t*)e);
+    }
+  } else if (system_info()->app_type != APP_DESKTOP && key < 128 && isprint(key)) {
     edit_input_char(widget, (wchar_t)key);
   }
 
@@ -754,7 +743,7 @@ ret_t edit_set_prop(widget_t* widget, const char* name, const value_t* v) {
     }
     edit->limit.type = input_type;
 
-    if(input_type == INPUT_PASSWORD) {
+    if (input_type == INPUT_PASSWORD) {
       edit_set_password_visible(widget, FALSE);
     }
 
@@ -1121,7 +1110,7 @@ widget_t* edit_create_ex(widget_t* parent, const widget_vtable_t* vt, xy_t x, xy
   edit_update_status(widget);
   edit->timer_id = TK_INVALID_ID;
   edit->idle_id = idle_add(edit_hook_children_button, edit);
-  
+
   edit->model = text_edit_create(widget, TRUE);
   ENSURE(edit->model != NULL);
 

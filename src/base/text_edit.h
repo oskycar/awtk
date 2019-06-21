@@ -138,7 +138,7 @@ uint32_t text_edit_get_cursor(text_edit_t* text_edit);
 ret_t text_edit_set_wrap_word(text_edit_t* text_edit, bool_t wrap_word);
 
 /**
- * @method text_edit_invert_caret_visible 
+ * @method text_edit_invert_caret_visible
  * 如果caret可见，将其设置为不可见。 如果caret不可见，将其设置为可见。
  * @param {text_edit_t*} text_edit text_edit对象。
  *
@@ -187,7 +187,7 @@ ret_t text_edit_set_mask(text_edit_t* text_edit, bool_t mask);
 ret_t text_edit_set_tips(text_edit_t* text_edit, const char* tips);
 
 /**
- * @method text_edit_set_mask_char 
+ * @method text_edit_set_mask_char
  * 设置马赛克字符。
  * @param {text_edit_t*} text_edit text_edit对象。
  * @param {wchar_t} mask_char 马赛克字符。

@@ -431,14 +431,14 @@ ret_t wstr_normalize_newline(wstr_t* str, wchar_t newline) {
   wchar_t* s = str->str;
   wchar_t* d = str->str;
 
-  while(*s) {
-    if(*s == '\r') {
-      if(s[1] == '\n') {
+  while (*s) {
+    if (*s == '\r') {
+      if (s[1] == '\n') {
         s++;
       }
       s++;
       *d++ = newline;
-    } else if(*s == '\n') {
+    } else if (*s == '\n') {
       s++;
       *d++ = newline;
     } else {
@@ -451,4 +451,3 @@ ret_t wstr_normalize_newline(wstr_t* str, wchar_t newline) {
 
   return RET_OK;
 }
-

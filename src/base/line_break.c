@@ -44,7 +44,7 @@ break_type_t line_break_check(wchar_t c1, wchar_t c2) {
       return LINE_BREAK_ALLOW;
     }
     case LINEBREAK_NOBREAK: {
-      return word_break_check(c1, c2);
+      return LINE_BREAK_NO;
     }
     default: { return LINE_BREAK_ALLOW; }
   }

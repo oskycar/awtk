@@ -286,21 +286,24 @@ static row_info_t* text_edit_multi_line_layout_line(text_edit_t* text_edit, uint
       break;
     }
 
-    if(impl->wrap_word) {
+    if (impl->wrap_word) {
+      if ((x + char_w) > layout_info->w) {
+        if (last_breakable_x > 0) {
+          i = last_breakable_i;
+          x = last_breakable_x;
+        }
+        break;
+      }
+
+      x += char_w;
       word_break = word_break_check(*p, p[1]);
-      if(word_break == LINE_BREAK_ALLOW && line_break == LINE_BREAK_ALLOW) {
+      if (word_break == LINE_BREAK_ALLOW && line_break == LINE_BREAK_ALLOW) {
         last_breakable_x = x;
         last_breakable_i = i;
       }
-
-      if ((x + char_w) > layout_info->w) {
-        i = last_breakable_i;
-        x = last_breakable_x;
-        break;
-      }
+    } else {
+      x += char_w;
     }
-
-    x += char_w;
   }
 
   if (i == state->cursor && state->cursor == text->size) {
@@ -401,13 +404,14 @@ static ret_t text_edit_paint_tips_text(text_edit_t* text_edit, canvas_t* c) {
   wstr_t* text = &(impl->tips);
   text_layout_info_t* layout_info = &(impl->layout_info);
 
-  if(text->size > 0) {
-/*    
-    uint32_t x = layout_info->margin_l;
-    uint32_t y = (layout_info->h - c->font_size) / 2 + layout_info->margin_t;
-    canvas_draw_text_in_rect(c, text->str, text->size, &r);
-*/
-    rect_t r = rect_init(layout_info->margin_l, layout_info->margin_t, layout_info->w, layout_info->h);
+  if (text->size > 0) {
+    /*
+        uint32_t x = layout_info->margin_l;
+        uint32_t y = (layout_info->h - c->font_size) / 2 + layout_info->margin_t;
+        canvas_draw_text_in_rect(c, text->str, text->size, &r);
+    */
+    rect_t r =
+        rect_init(layout_info->margin_l, layout_info->margin_t, layout_info->w, layout_info->h);
     canvas_draw_text_in_rect(c, text->str, text->size, &r);
   }
 
@@ -548,7 +552,7 @@ static ret_t text_edit_paint_text(text_edit_t* text_edit, canvas_t* c) {
   }
 }
 
-ret_t text_edit_paint(text_edit_t* text_edit, canvas_t* c) {
+static ret_t text_edit_do_paint(text_edit_t* text_edit, canvas_t* c) {
   return_value_if_fail(text_edit != NULL && c != NULL, RET_BAD_PARAMS);
 
   if (text_edit->c != NULL) {
@@ -567,6 +571,29 @@ ret_t text_edit_paint(text_edit_t* text_edit, canvas_t* c) {
       text_edit_paint_caret(text_edit, c);
     }
   }
+
+  return RET_OK;
+}
+
+ret_t text_edit_paint(text_edit_t* text_edit, canvas_t* c) {
+  rect_t save_r;
+  rect_t clip_r;
+  rect_t edit_r;
+  DECL_IMPL(text_edit);
+  point_t p = {.x = 0, .y = 0};
+  widget_t* widget = text_edit->widget;
+  text_layout_info_t* layout_info = &(impl->layout_info);
+
+  canvas_get_clip_rect(c, &save_r);
+  widget_to_screen(widget, &p);
+
+  edit_r = rect_init(p.x + layout_info->margin_l, p.y + layout_info->margin_t, layout_info->w,
+                     layout_info->h);
+  clip_r = rect_intersect(&save_r, &edit_r);
+
+  canvas_set_clip_rect(c, &clip_r);
+  text_edit_do_paint(text_edit, c);
+  canvas_set_clip_rect(c, &save_r);
 
   return RET_OK;
 }

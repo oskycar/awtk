@@ -227,7 +227,6 @@ static ret_t mledit_update_caret(const timer_info_t* timer) {
   }
 }
 
-
 static ret_t mledit_update_status(widget_t* widget) {
   if (widget->text.size == 0) {
     if (widget->focused) {
@@ -354,15 +353,9 @@ static ret_t mledit_on_event(widget_t* widget, event_t* e) {
 }
 
 const char* s_mledit_properties[] = {
-                                   WIDGET_PROP_READONLY,
-                                   WIDGET_PROP_MARGIN,
-                                   WIDGET_PROP_LEFT_MARGIN,
-                                   WIDGET_PROP_RIGHT_MARGIN,
-                                   WIDGET_PROP_TOP_MARGIN,
-                                   WIDGET_PROP_BOTTOM_MARGIN,
-                                   WIDGET_PROP_TIPS,
-                                   WIDGET_PROP_FOCUS,
-                                   NULL};
+    WIDGET_PROP_READONLY,     WIDGET_PROP_MARGIN,     WIDGET_PROP_LEFT_MARGIN,
+    WIDGET_PROP_RIGHT_MARGIN, WIDGET_PROP_TOP_MARGIN, WIDGET_PROP_BOTTOM_MARGIN,
+    WIDGET_PROP_TIPS,         WIDGET_PROP_FOCUS,      NULL};
 
 TK_DECL_VTABLE(mledit) = {.size = sizeof(mledit_t),
                           .type = WIDGET_TYPE_MLEDIT,
@@ -383,6 +376,10 @@ widget_t* mledit_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
 
   mledit->model = text_edit_create(widget, FALSE);
   ENSURE(mledit->model != NULL);
+  mledit->left_margin = 1;
+  mledit->top_margin = 1;
+  mledit->right_margin = 1;
+  mledit->bottom_margin = 1;
 
   return widget;
 }
