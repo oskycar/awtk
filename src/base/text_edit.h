@@ -38,7 +38,7 @@ typedef struct _text_edit_t {
  * @method text_edit_create
  * 创建text_edit对象
  * @param {widget_t*} widget 控件
- * @param {boo_t} single_line 单行。
+ * @param {boo_t} single_line 是否是单行编辑器。
  *
  * @return {widget_t*} 对象。
  */
@@ -118,25 +118,82 @@ ret_t text_edit_set_select(text_edit_t* text_edit, uint32_t start, uint32_t end)
  */
 ret_t text_edit_set_cursor(text_edit_t* text_edit, uint32_t cursor);
 
+/**
+ * @method text_edit_get_cursor
+ * 获取光标位置。
+ * @param {text_edit_t*} text_edit text_edit对象。
+ *
+ * @return {uin32_t} 返回光标的位置。
+ */
 uint32_t text_edit_get_cursor(text_edit_t* text_edit);
 
 /**
  * @method text_edit_set_wrap_word
- * 设置光标位置。
+ * 设置是否自动折行。
  * @param {text_edit_t*} text_edit text_edit对象。
- * @param {bool_t} wrap_word 光标偏移。
+ * @param {bool_t} wrap_word 是否自动折行。
  *
  * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
 ret_t text_edit_set_wrap_word(text_edit_t* text_edit, bool_t wrap_word);
 
+/**
+ * @method text_edit_invert_caret_visible 
+ * 如果caret可见，将其设置为不可见。 如果caret不可见，将其设置为可见。
+ * @param {text_edit_t*} text_edit text_edit对象。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
 ret_t text_edit_invert_caret_visible(text_edit_t* text_edit);
+
+/**
+ * @method text_edit_set_caret_visible
+ * 设置光标的看见性。
+ * @param {text_edit_t*} text_edit text_edit对象。
+ * @param {bool_t} caret_visible 是否可见。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
 ret_t text_edit_set_caret_visible(text_edit_t* text_edit, bool_t caret_visible);
 
+/**
+ * @method text_edit_set_max_rows
+ * 设置最大行数。
+ * @param {text_edit_t*} text_edit text_edit对象。
+ * @param {uint32_t} max_rows 最大行数。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
 ret_t text_edit_set_max_rows(text_edit_t* text_edit, uint32_t max_rows);
 
+/**
+ * @method text_edit_set_mask
+ * 设置是否马赛克字符(用于密码)。
+ * @param {text_edit_t*} text_edit text_edit对象。
+ * @param {bool_t} mask 是否马赛克字符。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
 ret_t text_edit_set_mask(text_edit_t* text_edit, bool_t mask);
+
+/**
+ * @method text_edit_set_tips
+ * 设置提示信息。
+ * @param {text_edit_t*} text_edit text_edit对象。
+ * @param {const char*} tips 提示信息。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
 ret_t text_edit_set_tips(text_edit_t* text_edit, const char* tips);
+
+/**
+ * @method text_edit_set_mask_char 
+ * 设置马赛克字符。
+ * @param {text_edit_t*} text_edit text_edit对象。
+ * @param {wchar_t} mask_char 马赛克字符。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
 ret_t text_edit_set_mask_char(text_edit_t* text_edit, wchar_t mask_char);
 
 /**

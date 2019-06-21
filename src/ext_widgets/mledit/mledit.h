@@ -59,6 +59,49 @@ BEGIN_C_DECLS
 typedef struct _mledit_t {
   widget_t widget;
 
+  /**
+   * @property {bool_t} readonly
+   * @annotation ["set_prop","get_prop","readable","persitent","design","scriptable"]
+   * 编辑器是否为只读。
+   */
+  bool_t readonly;
+  /**
+   * @property {uint8_t} top_margin
+   * @annotation ["set_prop","get_prop","readable","persitent","design","scriptable"]
+   * 上边距。
+   */
+  uint8_t top_margin;
+  /**
+   * @property {uint8_t} bottom_margin
+   * @annotation ["set_prop","get_prop","readable","persitent","design","scriptable"]
+   * 下边距。
+   */
+  uint8_t bottom_margin;
+  /**
+   * @property {uint8_t} left_margin
+   * @annotation ["set_prop","get_prop","readable","persitent","design","scriptable"]
+   * 左边距。
+   */
+  uint8_t left_margin;
+  /**
+   * @property {uint8_t} right_margin
+   * @annotation ["set_prop","get_prop","readable","persitent","design","scriptable"]
+   * 右边距。
+   */
+  uint8_t right_margin;
+  /**
+   * @property {char*} tips
+   * @annotation ["set_prop","get_prop","readable","persitent","design","scriptable"]
+   * 输入提示。
+   */
+  char* tips;
+  /**
+   * @property {bool_t} focus
+   * @annotation ["set_prop","get_prop","readable","persitent","design","scriptable"]
+   * 设置为焦点(通常用于在XML中缺省设置为焦点控件)。
+   */
+  bool_t focus;
+
   /*private*/
   text_edit_t* model;
   uint32_t timer_id;
@@ -77,6 +120,28 @@ typedef struct _mledit_t {
  * @return {widget_t*} 对象。
  */
 widget_t* mledit_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h);
+
+/**
+ * @method mledit_set_readonly
+ * 设置编辑器是否为只读。
+ * @annotation ["scriptable"]
+ * @param {widget_t*} widget widget对象。
+ * @param {bool_t} readonly 只读。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t mledit_set_readonly(widget_t* widget, bool_t readonly);
+
+/**
+ * @method mledit_set_input_tips
+ * 设置编辑器的输入提示。
+ * @annotation ["scriptable"]
+ * @param {widget_t*} widget widget对象。
+ * @param {char*} tips 输入提示。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t mledit_set_input_tips(widget_t* widget, const char* tips);
 
 /**
  * @method mledit_cast

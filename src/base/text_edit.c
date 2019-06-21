@@ -336,7 +336,7 @@ ret_t text_edit_layout(text_edit_t* text_edit) {
 
   widget_prepare_text_style(text_edit->widget, text_edit->c);
   widget_get_text_layout_info(text_edit->widget, layout_info);
-  while (offset < size && i < max_rows) {
+  while (offset <= size && i < max_rows) {
     row_info_t* iter = text_edit_layout_line(text_edit, i, offset);
     if (iter == NULL || iter->length == 0) {
       break;
@@ -374,14 +374,13 @@ static void text_edit_layout_for_stb(StbTexteditRow* row, STB_TEXTEDIT_STRING* s
 
 static ret_t text_edit_paint_caret(text_edit_t* text_edit, canvas_t* c) {
   DECL_IMPL(text_edit);
-  color_t caret_color = color_init(0, 0xff, 0, 0xff);
+  color_t caret_color = color_init(0, 0, 0, 0xff);
   text_layout_info_t* layout_info = &(impl->layout_info);
   uint32_t x = layout_info->margin_l + impl->caret.x - layout_info->ox;
   uint32_t y = layout_info->margin_t + impl->caret.y - layout_info->oy;
 
   if (impl->single_line) {
     y += (layout_info->h - c->font_size) / 2;
-    ;
   }
 
   canvas_set_stroke_color(c, caret_color);
