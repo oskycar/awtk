@@ -319,6 +319,8 @@ static ret_t edit_auto_fix(widget_t* widget) {
       break;
   }
 
+  text_edit_set_cursor(edit->model, -1);
+
   return RET_OK;
 }
 
@@ -618,8 +620,7 @@ ret_t edit_set_input_tips(widget_t* widget, const char* tips) {
   edit_t* edit = EDIT(widget);
   return_value_if_fail(edit != NULL && tips != NULL, RET_BAD_PARAMS);
 
-  TKMEM_FREE(edit->tips);
-  edit->tips = tk_strdup(tips);
+  edit->tips = tk_str_copy(edit->tips, tips);
   text_edit_set_tips(edit->model, edit->tips);
 
   return RET_OK;
