@@ -195,6 +195,10 @@ static ret_t text_edit_set_caret_pos(text_edit_impl_t* impl, uint32_t x, uint32_
     layout_info->ox = caret_right - layout_info->w;
   }
 
+  if(impl->wrap_word) {
+    layout_info->oy = 0;
+  }
+
   return RET_OK;
 }
 
@@ -384,8 +388,11 @@ static void text_edit_layout_for_stb(StbTexteditRow* row, STB_TEXTEDIT_STRING* s
 
 static ret_t text_edit_paint_caret(text_edit_t* text_edit, canvas_t* c) {
   DECL_IMPL(text_edit);
-  color_t caret_color = color_init(0, 0, 0, 0xff);
+  widget_t* widget = text_edit->widget;
+  style_t* style = widget->astyle;
+  color_t black = color_init(0, 0, 0, 0xff);
   text_layout_info_t* layout_info = &(impl->layout_info);
+  color_t caret_color = style_get_color(style, STYLE_ID_TEXT_COLOR, black);
   uint32_t x = layout_info->margin_l + impl->caret.x - layout_info->ox;
   uint32_t y = layout_info->margin_t + impl->caret.y - layout_info->oy;
 

@@ -299,6 +299,7 @@ static ret_t mledit_on_event(widget_t* widget, event_t* e) {
     case EVT_IM_COMMIT: {
       im_commit_event_t* evt = (im_commit_event_t*)e;
       mledit_commit_str(widget, evt->text);
+      mledit_update_status(widget);
       break;
     }
     case EVT_KEY_UP: {

@@ -34,6 +34,10 @@ break_type_t line_break_check(wchar_t c1, wchar_t c2) {
     init_linebreak();
   }
 
+  if(c1 == ' ') {
+    return LINE_BREAK_ALLOW;
+  }
+
   ret = is_line_breakable(c1, c2, "");
 
   switch (ret) {
