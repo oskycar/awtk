@@ -27,6 +27,26 @@
 BEGIN_C_DECLS
 
 /**
+ * @class text_edit_state_t
+ */
+typedef struct _text_edit_state_t {
+  int32_t ox;
+  int32_t oy;
+  uint32_t rows;
+  point_t caret;
+  uint32_t cursor;
+  uint32_t max_rows;
+  uint32_t select_start;
+  uint32_t select_end;
+
+  bool_t mask;
+  bool_t wrap_word;
+  wchar_t mask_char;
+  bool_t caret_visible;
+  bool_t single_line;
+} text_edit_state_t;
+
+/**
  * @class text_edit_t
  */
 typedef struct _text_edit_t {
@@ -88,6 +108,24 @@ ret_t text_edit_drag(text_edit_t* text_edit, xy_t x, xy_t y);
 ret_t text_edit_paste(text_edit_t* text_edit, wchar_t* str, uint32_t size);
 
 /**
+ * @method text_edit_cut
+ * 剪切文本。
+ * @param {text_edit_t*} text_edit text_edit对象。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t text_edit_cut(text_edit_t* text_edit);
+
+/**
+ * @method text_edit_copy
+ * 拷贝文本。
+ * @param {text_edit_t*} text_edit text_edit对象。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t text_edit_copy(text_edit_t* text_edit);
+
+/**
  * @method text_edit_key_down
  * 处理按键事件。
  * @param {text_edit_t*} text_edit text_edit对象。
@@ -126,6 +164,16 @@ ret_t text_edit_set_cursor(text_edit_t* text_edit, uint32_t cursor);
  * @return {uin32_t} 返回光标的位置。
  */
 uint32_t text_edit_get_cursor(text_edit_t* text_edit);
+
+/**
+ * @method text_edit_get_state
+ * 获取编辑器的状态。
+ * @param {text_edit_t*} text_edit text_edit对象。
+ * @param {text_edit_state_t*} state 状态。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t text_edit_get_state(text_edit_t* text_edit, text_edit_state_t* state);
 
 /**
  * @method text_edit_set_wrap_word

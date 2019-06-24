@@ -195,7 +195,7 @@ static ret_t text_edit_set_caret_pos(text_edit_impl_t* impl, uint32_t x, uint32_
     layout_info->ox = caret_right - layout_info->w;
   }
 
-  if(impl->wrap_word) {
+  if (impl->wrap_word) {
     layout_info->oy = 0;
   }
 
@@ -838,26 +838,10 @@ ret_t text_edit_key_down(text_edit_t* text_edit, key_event_t* evt) {
       stb_textedit_key(text_edit, state, STB_TEXTEDIT_K_UNDO);
     } else if (c == 'y') {
       stb_textedit_key(text_edit, state, STB_TEXTEDIT_K_REDO);
-    } else if (c == 'x' || c == 'c') {
-      if (state->select_end > state->select_start) {
-        str_t str;
-        wstr_t wstr;
-        wchar_t* start = text->str + state->select_start;
-        uint32_t size = state->select_end - state->select_start;
-
-        wstr_init(&wstr, size + 1);
-        wstr_append_with_len(&wstr, start, size);
-
-        str_init(&str, 0);
-        str_from_wstr(&str, wstr.str);
-        clip_board_set_text(str.str);
-
-        str_reset(&str);
-        wstr_reset(&wstr);
-      }
-      if (c == 'x') {
-        stb_textedit_cut(text_edit, state);
-      }
+    } else if (c == 'c') {
+      text_edit_copy(text_edit);
+    } else if (c == 'x') {
+      text_edit_cut(text_edit);
     } else if (c == 'a') {
       state->select_start = 0;
       state->select_end = text->size;
@@ -886,6 +870,45 @@ ret_t text_edit_key_down(text_edit_t* text_edit, key_event_t* evt) {
 
   stb_textedit_key(text_edit, state, key);
   text_edit_layout(text_edit);
+
+  return RET_OK;
+}
+
+ret_t text_edit_copy(text_edit_t* text_edit) {
+  DECL_IMPL(text_edit);
+  wstr_t* text = NULL;
+  STB_TexteditState* state = NULL;
+  return_value_if_fail(text_edit != NULL, RET_BAD_PARAMS);
+
+  state = &(impl->state);
+  text = &(text_edit->widget->text);
+  if (state->select_end > state->select_start) {
+    str_t str;
+    wstr_t wstr;
+    wchar_t* start = text->str + state->select_start;
+    uint32_t size = state->select_end - state->select_start;
+
+    wstr_init(&wstr, size + 1);
+    wstr_append_with_len(&wstr, start, size);
+
+    str_init(&str, 0);
+    str_from_wstr(&str, wstr.str);
+    clip_board_set_text(str.str);
+
+    str_reset(&str);
+    wstr_reset(&wstr);
+  }
+
+  return RET_OK;
+}
+
+ret_t text_edit_cut(text_edit_t* text_edit) {
+  DECL_IMPL(text_edit);
+  return_value_if_fail(text_edit != NULL, RET_BAD_PARAMS);
+
+  if (text_edit_copy(text_edit) == RET_OK) {
+    stb_textedit_cut(text_edit, &(impl->state));
+  }
 
   return RET_OK;
 }
@@ -968,9 +991,43 @@ ret_t text_edit_set_select(text_edit_t* text_edit, uint32_t start, uint32_t end)
   DECL_IMPL(text_edit);
   return_value_if_fail(text_edit != NULL, RET_BAD_PARAMS);
 
-  impl->state.select_end = start;
-  impl->state.select_start = end;
+  if (start > end) {
+    uint32_t t = start;
+    start = end;
+    end = t;
+  }
+
+  impl->state.select_start = start;
+  impl->state.select_end = tk_min(end, text_edit->widget->text.size);
+  ;
+
   text_edit_layout(text_edit);
+
+  return RET_OK;
+}
+
+ret_t text_edit_get_state(text_edit_t* text_edit, text_edit_state_t* state) {
+  DECL_IMPL(text_edit);
+  return_value_if_fail(text_edit != NULL && state != NULL, RET_BAD_PARAMS);
+
+  memset(state, 0x00, sizeof(text_edit_state_t));
+
+  state->ox = impl->layout_info.ox;
+  state->oy = impl->layout_info.oy;
+  state->rows = impl->rows->size;
+  state->caret = impl->caret;
+
+  state->cursor = impl->state.cursor;
+  state->max_rows = impl->rows->capacity;
+
+  state->select_start = impl->state.select_start;
+  state->select_end = impl->state.select_end;
+
+  state->mask = impl->mask;
+  state->wrap_word = impl->wrap_word;
+  state->mask_char = impl->mask_char;
+  state->caret_visible = impl->caret_visible;
+  state->single_line = impl->single_line;
 
   return RET_OK;
 }
