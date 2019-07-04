@@ -85,3 +85,4 @@ ret_t application_init() {
 
   return RET_OK;
 }
+#include "demo_main.c"

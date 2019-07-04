@@ -25,3 +25,6 @@ args.txt
 log
 *.pyc
 __pycache__
+/cmakexcodebuild
+/cmakebuild
+project.xcworkspace

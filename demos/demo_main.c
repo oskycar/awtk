@@ -31,7 +31,7 @@ ret_t application_init(void);
 
 #ifdef USE_GUI_MAIN
 int gui_app_start(int lcd_w, int lcd_h) {
-  tk_init(lcd_w, lcd_h, APP_MOBILE, NULL, NULL);
+  tk_init(lcd_w, lcd_h, APP_MOBILE, NULL, RES_ROOT);
 #else
 
 #if defined(WIN32)
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
 #endif /*NDEBUG*/
 #endif /*WIN32*/
 
-  tk_init(lcd_w, lcd_h, APP_SIMULATOR, NULL, NULL);
+  tk_init(lcd_w, lcd_h, APP_SIMULATOR, NULL, RES_ROOT);
 #endif
 
 //#define WITH_LCD_PORTRAIT 1
