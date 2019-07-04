@@ -422,7 +422,11 @@ static ret_t edit_on_key_down(widget_t* widget, key_event_t* e) {
     if (key == TK_KEY_v) {
       edit_paste(widget);
     } else {
-      return text_edit_key_down(edit->model, (key_event_t*)e);
+      text_edit_key_down(edit->model, (key_event_t*)e);
+    }
+
+    if (key != TK_KEY_LEFT && key != TK_KEY_RIGHT && key != TK_KEY_HOME && key != TK_KEY_END) {
+      edit_dispatch_event(widget, EVT_VALUE_CHANGING);
     }
   } else if (system_info()->app_type != APP_DESKTOP && key < 128 && isprint(key)) {
     edit_input_char(widget, (wchar_t)key);
@@ -437,6 +441,7 @@ ret_t edit_on_event(widget_t* widget, event_t* e) {
   return_value_if_fail(widget != NULL && edit != NULL, RET_BAD_PARAMS);
 
   if (edit->readonly) {
+    text_edit_set_cursor(edit->model, 0xffffffff);
     return RET_OK;
   }
 
@@ -525,6 +530,7 @@ ret_t edit_on_event(widget_t* widget, event_t* e) {
       prop_change_event_t* evt = (prop_change_event_t*)e;
       if (tk_str_eq(evt->name, WIDGET_PROP_TEXT) || tk_str_eq(evt->name, WIDGET_PROP_VALUE)) {
         edit_update_status(widget);
+        text_edit_set_cursor(edit->model, 0xffffffff);
       }
       break;
     }

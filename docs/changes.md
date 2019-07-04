@@ -1,4 +1,35 @@
 # 最新动态
+* 2019/07/04
+  * 修改多行编辑器鼠标选择文本时的坐标偏差。
+  * 增加TK\_GLYPH\_CACHE\_NR宏，允许开发者自行定义。
+  * 更新文档(感谢俊杰提供补丁)。
+
+* 2019/07/03
+  * 更新demoui
+  * mledit增加max_lines属性。
+  * mledit支持pageup/pagedown
+  * 动画停止时reversed设置为FALSE。
+  * 修改svg图片fill=""时的问题。
+  * widget的pointer/key事件处理增加can\_not\_destroy保护。
+  * 增加行号控件，配合mledit控件使用。
+
+* 2019/07/02
+  * 修改OpenGL模式下SVG无法绘制的问题(感谢智明提供补丁)。
+  * mledit 支持垂直滚动条。
+
+* 2019/07/01
+  * 增加self\_layouter\_menu文档和示例。
+
+* 2019/06/30
+  * 增加self\_layouter\_menu方便实现弹出菜单。
+
+* 2019/06/29
+  * 子控件缺省布局方式增加align_h的参数，
+
+* 2019q/06/28
+  * 完善edit。
+  * 完善combobox
+
 * 2019/06/26
   * 新增内存耗尽处理。
   * 修改 slide menu 的 BUG（感谢朝泽提供补丁）
