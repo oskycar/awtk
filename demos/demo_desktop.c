@@ -42,7 +42,8 @@ int main(void) {
   memset(res_root, 0x00, sizeof(res_root));
 
   path_build(res_root, MAX_PATH, app_root, "demos", NULL);
-  tk_init(800, 480, APP_DESKTOP, "AWTK Demo", res_root);
+//  tk_init(800, 480, APP_DESKTOP, "AWTK Demo", res_root);
+    tk_init(800, 480, APP_DESKTOP, "AWTK Demo", RES_ROOT);
   system_info_set_default_font(system_info(), "default_full");
 
   assets_init();

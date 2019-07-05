@@ -339,6 +339,8 @@ set(awtk_demo_sources
     "${TK_ROOT}/demos/demo_tr_app.c"
     "${TK_ROOT}/demos/demo_animator_app.c"
     "${TK_ROOT}/demos/demo_thread_app.c"
+    "${TK_ROOT}/demos/demo_desktop.c"
+    "${TK_ROOT}/demos/preview_ui.c"
 )
 
 file(GLOB awtk_demo_c_sources "${TK_ROOT}/../demo/awtk-c-demos/demos/[^demo_main]*.c")
