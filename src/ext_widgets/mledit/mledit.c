@@ -97,7 +97,7 @@ static ret_t mledit_get_prop(widget_t* widget, const char* name, value_t* v) {
     value_set_bool(v, mledit->wrap_word);
     return RET_OK;
   } else if (tk_str_eq(name, MLEDIT_PROP_MAX_LINES)) {
-    value_set_bool(v, mledit->max_lines);
+    value_set_int(v, mledit->max_lines);
     return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_LEFT_MARGIN)) {
     value_set_int(v, mledit->left_margin);
@@ -182,6 +182,11 @@ static ret_t mledit_on_destroy(widget_t* widget) {
   mledit_t* mledit = MLEDIT(widget);
   return_value_if_fail(widget != NULL && mledit != NULL, RET_BAD_PARAMS);
 
+  if (mledit->timer_id != TK_INVALID_ID) {
+    timer_remove(mledit->timer_id);
+  }
+
+  wstr_reset(&(mledit->temp));
   text_edit_destroy(mledit->model);
 
   return RET_OK;
@@ -196,11 +201,10 @@ static ret_t mledit_on_paint_self(widget_t* widget, canvas_t* c) {
 }
 
 static ret_t mledit_commit_str(widget_t* widget, const char* str) {
-  wchar_t wstr[32] = {0};
   mledit_t* mledit = MLEDIT(widget);
-  utf8_to_utf16(str, wstr, ARRAY_SIZE(wstr));
+  wstr_set_utf8(&(mledit->temp), str);
 
-  text_edit_paste(mledit->model, wstr, wcslen(wstr));
+  text_edit_paste(mledit->model, mledit->temp.str, mledit->temp.size);
 
   return RET_OK;
 }
@@ -273,6 +277,16 @@ static ret_t mledit_pointer_up_cleanup(widget_t* widget) {
   return RET_OK;
 }
 
+ret_t mledit_clear(mledit_t* mledit) {
+  widget_t* widget = WIDGET(mledit);
+  return_value_if_fail(widget != NULL && mledit != NULL, RET_BAD_PARAMS);
+
+  widget->text.size = 0;
+  text_edit_set_cursor(mledit->model, 0);
+
+  return widget_invalidate_force(widget, NULL);
+}
+
 static ret_t mledit_on_event(widget_t* widget, event_t* e) {
   uint32_t type = e->type;
   mledit_t* mledit = MLEDIT(widget);
@@ -318,6 +332,9 @@ static ret_t mledit_on_event(widget_t* widget, event_t* e) {
     }
     case EVT_IM_COMMIT: {
       im_commit_event_t* evt = (im_commit_event_t*)e;
+      if (evt->replace) {
+        mledit_clear(mledit);
+      }
       mledit_commit_str(widget, evt->text);
       mledit_update_status(widget);
       break;
@@ -466,6 +483,7 @@ widget_t* mledit_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
   mledit->top_margin = 1;
   mledit->right_margin = 1;
   mledit->bottom_margin = 1;
+  wstr_init(&(mledit->temp), 0);
 
   return widget;
 }
