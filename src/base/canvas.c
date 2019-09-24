@@ -1,4 +1,4 @@
-/**
+﻿/**
  * File:   canvas.c
  * Author: AWTK Develop Team
  * Brief:  canvas provides basic drawings functions.
@@ -26,7 +26,6 @@
 #include "base/canvas.h"
 #include "tkc/time_now.h"
 #include "tkc/color_parser.h"
-#include "base/wuxiaolin.inc"
 #include "base/system_info.h"
 
 #include "base/lcd_profile.h"
@@ -96,6 +95,19 @@ ret_t canvas_set_font_manager(canvas_t* c, font_manager_t* font_manager) {
   return_value_if_fail(c != NULL && font_manager != NULL, RET_BAD_PARAMS);
 
   c->font_manager = font_manager;
+
+  return RET_OK;
+}
+
+ret_t canvas_set_assets_manager(canvas_t* c, assets_manager_t* assets_manager) {
+  vgcanvas_t* vgcanvas = NULL;
+  return_value_if_fail(c != NULL && assets_manager != NULL, RET_BAD_PARAMS);
+
+  vgcanvas = lcd_get_vgcanvas(c->lcd);
+  c->assets_manager = assets_manager;
+  if (vgcanvas != NULL) {
+    vgcanvas_set_assets_manager(vgcanvas, assets_manager);
+  }
 
   return RET_OK;
 }
@@ -285,6 +297,11 @@ float_t canvas_measure_utf8(canvas_t* c, const char* str) {
 ret_t canvas_begin_frame(canvas_t* c, rect_t* dirty_rect, lcd_draw_mode_t draw_mode) {
   ret_t ret = RET_OK;
   return_value_if_fail(c != NULL, RET_BAD_PARAMS);
+  if (c->began_frame) {
+    return RET_OK;
+  } else {
+    c->began_frame = TRUE;
+  }
 
   c->ox = 0;
   c->oy = 0;
@@ -526,7 +543,7 @@ static ret_t canvas_draw_text_impl(canvas_t* c, const wchar_t* str, uint32_t nr,
   glyph_t g;
   uint32_t i = 0;
   xy_t left = x;
-  uint32_t start_time = time_now_ms();
+  uint64_t start_time = time_now_ms();
   font_size_t font_size = c->font_size;
 
   y -= font_size * 1 / 3;
@@ -1004,6 +1021,12 @@ ret_t canvas_draw_image_patch9(canvas_t* c, bitmap_t* img, rect_t* dst_in) {
 
 ret_t canvas_end_frame(canvas_t* c) {
   return_value_if_fail(c != NULL, RET_BAD_PARAMS);
+  if (c->began_frame) {
+    c->began_frame = FALSE;
+  } else {
+    return RET_OK;
+  }
+
   canvas_draw_fps(c);
   canvas_set_global_alpha(c, 0xff);
 

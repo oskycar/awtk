@@ -1,5 +1,6 @@
 <window anim_hint="htranslate" text="hscroll_label" children_layout="default(c=1,h=30,xm=10,s=5)">
   <hscroll_label text="炫酷的 GUI 引擎。" /> 
+  <hscroll_label text="炫酷的 GUI 引擎。" style="right"/> 
 
   <hscroll_label 
     lull="1000"
@@ -22,6 +23,7 @@
     text="(only_focus ellipses loop)为用户提供一个功能强大、高效可靠、简单易用、可轻松做出炫酷效果的 GUI 引擎。" /> 
 
   <hscroll_label 
+    style="green"
     loop="true"
     yoyo="true"
     ellipses="true"

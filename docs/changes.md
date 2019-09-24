@@ -1,25 +1,235 @@
 # 最新动态
+
+* 2019/09/13
+  * 完善ubjson/value
+  * 修改前几天修改widget\_update\_style留下的问题。
+
+* 2019/09/19
+  * 修改"color\_component" "digit\_clock" "mutable\_image"的注释，支持 designer 编辑（感谢大恒提供补丁）。
+  * 增加 object\_array
+  * 增加 object\_get\_prop\_by\_path
+  * 完善 children\_layouter\_list\_view（感谢尧燊提供补丁）。
+  * 完善 children\_layouter\_default（感谢尧燊提供补丁）。
+  * 增加 EVT\_REQUEST\_QUIT\_APP 事件，点击原生窗口关闭按钮时，通过窗口管理器触发，注册该事件并返回RET_STOP，可以阻止窗口关闭。
+  
+* 2019/09/18
+  * 增加 iostream\_mem。
+  * 重构 theme gen。
+  * 完善 style\_mutable，set value 时和 theme gen 保持一致。
+  * edit 输入类型为 email 时允许输入空格（感谢俊杰提供补丁）。
+
+* 2019/09/17
+  * 修改 LinuxCPU 占用高的问题（感谢俊杰提供补丁）。
+  * 修改 edit 快捷键在 DESKTOP 模式下无效的问题（感谢朝泽提供补丁）。
+  * 增加《如何开启按键音》的 [文档](docs/how_to_enable_key_touch_sound.md)。
+  * 完善 image\_manager\_update\_specific（感谢尧燊提供补丁）。
+  * edit keydown 事件处理后返回 RET\_STOP（感谢朝泽提供补丁）。
+  * mledit keydown 事件处理后返回 RET\_STOP。
+
+* 2019/09/16
+  * 重构 ubjson parser
+  * 完善 switch（感谢朝泽提供补丁）。
+  * 完善 color component（感谢朝泽提供补丁）。
+  * 完善 main loop sdl（感谢朝泽提供补丁）。
+
+* 2019/09/15
+  * ubjson reader
+  * ubjson parser
+
+* 2019/09/14
+  * ubjson writer
+
+* 2019/09/13
+  * 窗口切换到后台时自动失去焦点。
+
+* 2019/09/11
+  * 优化 update style 的处理流程。
+  * 修改 style 和 state 不一致的 BUG（感谢王程提供补丁）。
+  * 修改 window\_manager\_create\_animator，只有一个窗口时不创建动画（感谢王程提供补丁）。
+  * 修改 text selector 设置 selected index 的 BUG。
+  * 完善 dialog highligher 对 native window resize 事件的处理。
+
+* 2019/09/10
+  * 更新文档。
+  * 修改 color picker 控件动态调整大小的问题。
+
+* 2019/09/05
+  * 完善 fontgen（感谢智明提供补丁）。
+  * 完善 sdl main loop（感谢朝泽提供补丁）。
+  * 增加 socket stream 实现。
+
+* 2019/09/04
+  * 修改 freetype 字体大小的问题（感谢智明提供补丁）。
+  * change time to uint64
+  * 修改 PC 版本获取系统时间的函数（感谢陈谭提供补丁）。
+
+* 2019/09/03
+  * edit/mledit 失去焦点时，unselect 当前选中的文本。
+  * 缺省使用 stb 字体加载器。
+
+* 2019/09/02
+  * merge patch issue #224（感谢陈谭提供补丁）。
+
+* 2019/09/01
+  * children layouter list view 增加 cols 参数。
+
+* 2019/08/30
+  * 修改 windows 下使用单头文件 freetype 的问题（感谢陈谭提供补丁）。
+  * 修改 list view children layouter 的 BUG（感谢尧燊提供补丁）。
+  * 完善《硬件资源需求评估》（感谢智明提供补丁）。  
+  * 位图字体比较时，忽略字体大小（感谢智明提供补丁）。  
+
+* 2019/08/29
+  * 修改重载 new 的问题（感谢陈谭提供补丁）。
+  * 修改 combox 在 dialog 上焦点设置错误的问题。
+  * 优化数字时钟，时间没变时不重绘。
+  * 修改 widget 焦点切换的 BUG（感谢尧燊提供补丁）。
+  * 修改 children layouter 的 BUG（感谢尧燊提供补丁）。
+
+* 2019/08/28
+  * 增加 widget\_reset\_canvas 用于 designer 打开新工程时清除 vgcanvas 中的资源。
+  * hscroll\_label 支持右对齐（感谢智明提供补丁）。
+  * 修改密码编辑器的 BUG（感谢俊杰提供补丁）。
+  * vgcanvas 支持设置 assets manager, 以便从指定的 assets manager 加载字体。
+    
+* 2019/08/27
+  * 完善 lcd mono（感谢智明提供补丁）。
+  * 完善 wuxiaolin draw line（感谢培煌提供补丁）。 
+  * 增加 stream 接口，以及基于内存和文件的实现。
+
+* 2019/08/24
+  * 更新文档。
+  * 完善 mledit，支持 readonly 属性。
+
+* 2019/08/23
+  * 增加 prop desc 结构。
+  * 完善 object/object default
+
+* 2019/08/22
+  * 增加 combo\_box\_ex 控件（感谢大恒提供）
+  * 增加属性 WIDGET\_PROP\_FOCUSED 表示当前的焦点状态，WIDGET\_PROP\_FOCUS 属性为过时。
+
+* 2019/08/20
+  * svg 中 float\_t 改为 float。
+  * 更新 stm32 相关项目。
+  * 更新 awtk-mvvm/awtk-nogui/awtk-linux-fb/awtk-iotjs
+  * 增加 awtk-lite
+  * combobox 处理 resize 事件。
+  * combobox 支持自定义打开弹出窗口。
+
+* 2019/08/19
+  * awtk 编译成 tkc/base/widgets/extwidgets/awtk 几个独立的库，并调整部分文件的位置。
+
+* 2019/08/18
+  * 去掉 widget pool。
+
+* 2019/08/17
+  * slider 支持非正方形的 icon（感谢俊杰提供补丁）
+  * edit/mledit 处理 resize 事件。
+
+* 2019/08/16
+  * 引入片段帧缓存 (Fragment Frame Buffer)，部分解决 STMF103 上由于没足够内存做 FrameBuffer 导致闪烁的问题。
+  * 支持 8bit gray+alpha png
+
+* 2019/08/15
+  * 增加单色 LCD 的文档。
+  * 支持 mingw 编译（感谢智明提供补丁）
+  * 修改 cairo/pixman config.h 冲突的问题（感谢陈谭提供补丁）
+  * 由于生成单色字体需要 freetype，而且 freetype 的效果比 stb 稍微好一点，所以 PC 版本采用 freetype 作为字体引擎。
+
+* 2019/08/14
+  * 完善文档。
+  * 增加宏 TK\_XML\_MAX\_ATTRS 用于控制 XML 属性的最大个数（缺省 24)。
+  * 通过 widget factory 触发 EVT\_WIDGET\_CREATED 事件。
+  * 修改在 stm32f103 上的问题。
+  * 完善 window\_animator（感谢智明提供补丁）
+
+* 2019/08/13
+  * 模拟器支持单色屏。
+  * 修复 native window 初始化顺序的 BUG（感谢智明提供补丁）
+
+* 2019/08/12
+  * 增加 mono 图片生成工具。
+
+* 2019/08/11
+  * 增加 mono 字体生成工具。
+
+* 2019/08/10
+  * edit/mledit set\_text 触发 EVT\_VALUE\_CHANGED。
+  * 增加 lcd mono。
+
+* 2019/08/09
+  * 重构窗口管理器。
+  * 完善缺省输入法。
+  * 当前窗口为 keyboard 时，不触发 TO\_BACKGROUND/TO\_FOREGROUND。
+  * 修改 slider 资源加载的问题（感谢朝泽提供补丁）
+  * 修改 fill rect 坐标的问题（感谢智明提供补丁）
+  * 修改 color tile 边框颜色的问题（感谢智明提供补丁）
+
+* 2019/08/08
+  * 重构
+  * 完善 mutable image（感谢智明提供补丁）
+  * 完善 expr eval，支持十六进制数。
+  * mledit 支持 value changing 事件。
+  * 完善 slider 拖动效果。
+
+* 2019/08/07
+  * 修改 valgrind 发现的问题。
+  * 修改 shortcut 的 BUG。
+  * 完善 SDL 事件处理（感谢朝泽提供补丁）
+  * 完善 pages 控件（感谢朝泽提供补丁）
+  * 修改 event 文档的 BUG（感谢朝泽提供补丁）
+
+* 2019/08/06
+  * 优化 nanovg GL fragment shader(draw text)。
+  * 禁用点击 scrollview 中控件时自动滚动到可视区的功能。
+  * 完善 slider 拖动效果。
+
+* 2019/08/05
+  * 修改 uiloader/window base/style mutable/layouter 等 BUG（感谢尧燊提供补丁）。
+
+* 2019/08/04-05
+  * 优化 nanovg GL fragment shader。
+  * 完善 Android 移植。
+  * 完善 slide view 控件（感谢朝泽提供补丁）
+
+* 2019/08/03
+  * 完善 Android 移植。
+
+* 2019/07/20-8/1
+  * window manager 抽象成接口。
+  * 引入 native\_window 接口。
+
+* 2019/08/02
+  * 禁用 label/button/image/hscroll\_label 的缓存。
+
+* 2019/07/29
+  * fix edit clone 的问题。
+
+* 2019/07/26
+  * 完善 text edit（感谢智明提供补丁）
+
 * 2019/07/24
-  * 完善preview\_ui(感谢俊杰提供补丁)
+  * 完善 preview\_ui（感谢俊杰提供补丁）
 
 * 2019/07/20
-  * 完善list\_view\_h。
+  * 完善 list\_view\_h。
 
 * 2019/07/19
-  * Slider的图标用ICON方式绘制。
-  * 增加属性with\_focus\_state，如果希望控件具有焦点状态，有不希望焦点停留，可以用本属性代替focusable属性。
+  * Slider 的图标用 ICON 方式绘制。
+  * 增加属性 with\_focus\_state，如果希望控件具有焦点状态，有不希望焦点停留，可以用本属性代替 focusable 属性。
   * 完善控件动画。
 
 * 2019/07/18
-  * gles的canvas画直线和画矩形边框的线宽问题，gles统一和agge一样为1线宽(感谢智明提供补丁)。
+  * gles 的 canvas 画直线和画矩形边框的线宽问题，gles 统一和 agge 一样为 1 线宽（感谢智明提供补丁）。
 
 * 2019/07/17
-  * 完善switch控件(感谢朝泽提供补丁)
+  * 完善 switch 控件（感谢朝泽提供补丁）
 
 * 2019/07/15
-  * 完善agge后端(感谢智明提供补丁)
-  * 完善cairo后端(感谢智明提供补丁)
-  * 完善demoui。
+  * 完善 agge 后端（感谢智明提供补丁）
+  * 完善 cairo 后端（感谢智明提供补丁）
+  * 完善 demoui。
 
 * 2019/07/12
   * 改进 widget\_get\_type 通过属性获取。

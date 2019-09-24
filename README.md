@@ -172,6 +172,12 @@ scons
 
 （请先安装 python，scons 和 Visual Studio C++（版本 >=2017)
 
+> 如果没有安装pywin32，请pip安装：
+
+```
+pip install pywin32
+```
+
 编译运行 （在命令行模式下，进入 awtk 所在的目录，并运行下列命令）：
 
 ```
@@ -179,15 +185,34 @@ scons
 bin\demoui
 ```
 
+> 如果没有安装PIL，请用pip安装。
+
+```
+pip install Pillow
+```
+
 ## 五、在线演示
 
-* [基本控件在线演示](http://zlgawtk.bceapp.com/awtk/demos/demoui/index.html)
 
-> 目前 AWTK-WEB 还处于测试阶段，部分功能不能正常工作。如有兴趣请在 PC 上自行编译运行。
+* [图表演示](http://zlgawtk.bceapp.com/awtk/demos/Chart-Demo/index.html)
+
+* [仪表演示](http://zlgawtk.bceapp.com/awtk/demos/Meter-Demo/index.html)
+
+* [智能手表演示](http://zlgawtk.bceapp.com/awtk/demos/SmartWatch-Demo/index.html)
+
+* [清风系统演示](http://zlgawtk.bceapp.com/awtk/demos/CleanAir-Demo/index.html)
+
+* [音乐播放器演示](http://zlgawtk.bceapp.com/awtk/demos/MusicPlayer-Demo/index.html)
+
+* [基本控件在线演示](http://zlgawtk.bceapp.com/awtk/demos/demoui/index.html)
 
 ## 六、各个平台的移植
 
 #### 官方支持平台 
+
+* [awtk-web](https://github.com/zlgopen/awtk-web)
+
+* [awtk-android](https://github.com/zlgopen/awtk-android)
 
 * [awtk-aworks-rt1052](https://github.com/zlgopen/awtk-aworks-rt1052)
 
@@ -203,11 +228,20 @@ bin\demoui
 
 * [linux-framebuffer （嵌入式 Linux 请用本项目）](https://github.com/zlgopen/awtk-linux-fb)
 
+#### 芯片原厂移植
+
+* [君正](https://github.com/zlgopen/awtk-port-ingenic`)
+
+
 ## 七、各语言的绑定
 
-* [awtk-lua](https://github.com/zlgopen/awtk-lua)
+* [AWTK 绑定代码生成器](https://github.com/zlgopen/awtk-binding)
 
-* [awtk-js](https://github.com/zlgopen/awtk-js)
+* [LUA绑定](https://github.com/zlgopen/awtk-lua)
+
+* [JS绑定之QuickJS](https://github.com/zlgopen/awtk-quickjs)
+
+* [JS绑定之JerryScript](https://github.com/zlgopen/awtk-jerryscript)
 
 ## 八、相关工程
 
@@ -216,8 +250,6 @@ bin\demoui
 * [C 示例代码](https://github.com/zlgopen/awtk-c-demos)
 
 * [精彩示例](https://github.com/zlgopen/awtk-examples)
-
-* [AWTK-WEB](https://github.com/zlgopen/awtk-web)
 
 * [AWTK-MVVM](https://github.com/zlgopen/awtk-mvvm)
 

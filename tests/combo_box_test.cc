@@ -97,13 +97,14 @@ TEST(ComboBox, event) {
   combo_box_set_options(w, str);
   combo_box_set_selected_index(w, 0);
 
-  s_log = "";
   widget_on(w, EVT_VALUE_WILL_CHANGE, on_change_events, NULL);
   widget_on(w, EVT_VALUE_CHANGED, on_change_events, NULL);
 
+  s_log = "";
   combo_box_set_selected_index(w, 0);
   ASSERT_EQ(s_log, "");
 
+  s_log = "";
   combo_box_set_selected_index(w, 1);
   ASSERT_EQ(s_log, "will_change;change;");
 
@@ -115,6 +116,28 @@ TEST(ComboBox, cast) {
 
   ASSERT_EQ(w, edit_cast(w));
   ASSERT_EQ(w, combo_box_cast(w));
+
+  widget_destroy(w);
+}
+
+TEST(ComboBox, resize) {
+  widget_t* w = combo_box_create(NULL, 0, 0, 100, 100);
+  edit_t* edit = EDIT(w);
+
+  ASSERT_EQ(edit->right_margin, 100);
+
+  widget_resize(w, 200, 30);
+  ASSERT_EQ(edit->right_margin, 30);
+
+  widget_destroy(w);
+}
+
+TEST(ComboBox, move_resize) {
+  widget_t* w = combo_box_create(NULL, 0, 0, 100, 100);
+  edit_t* edit = EDIT(w);
+
+  widget_move_resize(w, 10, 10, 200, 50);
+  ASSERT_EQ(edit->right_margin, 50);
 
   widget_destroy(w);
 }

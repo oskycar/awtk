@@ -575,9 +575,14 @@
     <focused  />
   </style>
 
-  <style name="foo">
-    <normal   text_color="black" />
-    <focused  bg_color="#e0e0e0" text_color="black" />
+  <style name="green" text_color="green">
+    <normal   />
+    <focused  />
+  </style>
+  
+  <style name="right" text_color="green" text_align_h="right">
+    <normal   />
+    <focused  />
   </style>
 </hscroll_label>
 

@@ -20,6 +20,7 @@
  > 在非GUI线程请用timer\_queue。
 
 
+
 ----------------------------------
 ### 函数
 <p id="timer_t_methods">
@@ -30,7 +31,6 @@
 | <a href="#timer_t_timer_count">timer\_count</a> | 返回timer的个数。 |
 | <a href="#timer_t_timer_modify">timer\_modify</a> | 修改指定的timer的duration，修改之后定时器重新开始计时。 |
 | <a href="#timer_t_timer_next_time">timer\_next\_time</a> | 返回最近的timer到期时间。 |
-| <a href="#timer_t_timer_now">timer\_now</a> | 获取当前时间(ms)。 |
 | <a href="#timer_t_timer_queue">timer\_queue</a> | 用于非GUI线程增加一个timer，本函数向主循环的事件队列中发送一个增加timer的请求。 |
 | <a href="#timer_t_timer_remove">timer\_remove</a> | 删除指定的timer。 |
 | <a href="#timer_t_timer_reset">timer\_reset</a> | 重置指定的timer，重置之后定时器重新开始计时。 |
@@ -41,6 +41,7 @@
 * 函数功能：
 
 > <p id="timer_t_timer_add"> 增加一个timer。
+
 
 
 
@@ -67,6 +68,7 @@ uint32_t timer_add (timer_func_t on_timer, void* ctx, uint32_t duration);
 
 
 
+
 * 函数原型：
 
 ```
@@ -84,6 +86,7 @@ uint32_t timer_count ();
 * 函数功能：
 
 > <p id="timer_t_timer_modify"> 修改指定的timer的duration，修改之后定时器重新开始计时。
+
 
 
 
@@ -109,6 +112,7 @@ ret_t timer_modify (uint32_t timer_id, uint32_t duration);
 
 
 
+
 * 函数原型：
 
 ```
@@ -120,26 +124,6 @@ uint32_t timer_next_time ();
 | 参数 | 类型 | 说明 |
 | -------- | ----- | --------- |
 | 返回值 | uint32\_t | 返回最近的timer到期时间。 |
-#### timer\_now 函数
------------------------
-
-* 函数功能：
-
-> <p id="timer_t_timer_now"> 获取当前时间(ms)。
-
-
-
-* 函数原型：
-
-```
-uint32_t timer_now ();
-```
-
-* 参数说明：
-
-| 参数 | 类型 | 说明 |
-| -------- | ----- | --------- |
-| 返回值 | uint32\_t | 返回获取当前时间(ms)。 |
 #### timer\_queue 函数
 -----------------------
 
@@ -147,6 +131,7 @@ uint32_t timer_now ();
 
 > <p id="timer_t_timer_queue"> 用于非GUI线程增加一个timer，本函数向主循环的事件队列中发送一个增加timer的请求。
  timer回调函数，回调函数返回RET_REPEAT，则下次继续执行，否则自动移出。
+
 
 
 
@@ -173,6 +158,7 @@ ret_t timer_queue (timer_func_t , void* ctx, uint32_t duration);
 
 
 
+
 * 函数原型：
 
 ```
@@ -194,6 +180,7 @@ ret_t timer_remove (uint32_t timer_id);
 
 
 
+
 * 函数原型：
 
 ```
@@ -212,6 +199,7 @@ ret_t timer_reset (uint32_t timer_id);
 * 函数功能：
 
 > <p id="timer_t_timer_set_on_destroy"> 设置一个回调函数，在timer被销毁时调用(方便脚本语言去释放回调函数)。
+
 
 
 

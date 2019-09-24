@@ -1,4 +1,4 @@
-/**
+﻿/**
  * File:   enums.c
  * Author: AWTK Develop Team
  * Brief:  enumerations
@@ -23,7 +23,7 @@
 #include "base/keys.h"
 #include "base/enums.h"
 #include "base/widget.h"
-#include "widgets/edit.h"
+#include "base/input_method.h"
 #include "base/window_animator.h"
 #include "base/assets_manager.h"
 
@@ -57,6 +57,7 @@ static const key_type_value_t image_draw_type_name_value[] = {
     {"icon", 0, IMAGE_DRAW_ICON},
     {"center", 0, IMAGE_DRAW_CENTER},
     {"scale", 0, IMAGE_DRAW_SCALE},
+    {"auto", 0, IMAGE_DRAW_SCALE_AUTO},
     {"scale_auto", 0, IMAGE_DRAW_SCALE_AUTO},
     {"scale_down", 0, IMAGE_DRAW_SCALE_DOWN},
     {"scale_w", 0, IMAGE_DRAW_SCALE_W},

@@ -121,7 +121,7 @@ static bool_t edit_is_valid_char_default(widget_t* widget, wchar_t c) {
     }
     case INPUT_EMAIL: {
       if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' ||
-          c == '.' || c == '_') {
+          c == '.' || c == '_' || c == ' ') {
         ret = TRUE;
       } else if (c == '@') {
         if (cursor_pos > 0 && wcs_chr(text->str, c) == NULL) {
@@ -379,7 +379,6 @@ static ret_t edit_pointer_up_cleanup(widget_t* widget) {
   edit_t* edit = EDIT(widget);
   return_value_if_fail(edit != NULL && widget != NULL, RET_BAD_PARAMS);
 
-  edit->focus = FALSE;
   widget->focused = FALSE;
   widget_ungrab(widget->parent, widget);
   widget_set_state(widget, WIDGET_STATE_NORMAL);
@@ -421,7 +420,7 @@ static ret_t edit_on_key_down(widget_t* widget, key_event_t* e) {
     } else {
       edit_dec(edit);
     }
-    return RET_OK;
+    return RET_STOP;
   } else if (key == TK_KEY_UP) {
     if (!edit_is_number(widget)) {
       widget_focus_prev(widget);
@@ -429,7 +428,7 @@ static ret_t edit_on_key_down(widget_t* widget, key_event_t* e) {
     } else {
       edit_inc(edit);
     }
-    return RET_OK;
+    return RET_STOP;
   }
 
   if (key == TK_KEY_BACKSPACE || key == TK_KEY_DELETE || key == TK_KEY_LEFT ||
@@ -445,14 +444,18 @@ static ret_t edit_on_key_down(widget_t* widget, key_event_t* e) {
     if (key != TK_KEY_LEFT && key != TK_KEY_RIGHT && key != TK_KEY_HOME && key != TK_KEY_END) {
       edit_dispatch_event(widget, EVT_VALUE_CHANGING);
     }
-  } else if (system_info()->app_type != APP_DESKTOP && key < 128 && isprint(key)) {
-    edit_input_char(widget, (wchar_t)key);
+  } else if (key < 128 && isprint(key)) {
+    app_type_t app_type = system_info()->app_type;
+    if (app_type != APP_DESKTOP && app_type != APP_MOBILE) {
+      edit_input_char(widget, (wchar_t)key);
+    }
   }
 
-  return RET_OK;
+  return RET_STOP;
 }
 
 ret_t edit_on_event(widget_t* widget, event_t* e) {
+  ret_t ret = RET_OK;
   uint32_t type = e->type;
   edit_t* edit = EDIT(widget);
   return_value_if_fail(widget != NULL && edit != NULL, RET_BAD_PARAMS);
@@ -495,7 +498,7 @@ ret_t edit_on_event(widget_t* widget, event_t* e) {
       break;
     }
     case EVT_KEY_DOWN: {
-      edit_on_key_down(widget, (key_event_t*)e);
+      ret = edit_on_key_down(widget, (key_event_t*)e);
       edit_update_status(widget);
       break;
     }
@@ -520,6 +523,7 @@ ret_t edit_on_event(widget_t* widget, event_t* e) {
           widget_set_state(widget, WIDGET_STATE_ERROR);
         }
       }
+      text_edit_unselect(edit->model);
       edit_dispatch_event(widget, EVT_VALUE_CHANGED);
       break;
     }
@@ -543,12 +547,9 @@ ret_t edit_on_event(widget_t* widget, event_t* e) {
       }
       break;
     }
-    case EVT_PROP_CHANGED: {
-      prop_change_event_t* evt = (prop_change_event_t*)e;
-      if (tk_str_eq(evt->name, WIDGET_PROP_TEXT) || tk_str_eq(evt->name, WIDGET_PROP_VALUE)) {
-        edit_update_status(widget);
-        text_edit_set_cursor(edit->model, 0xffffffff);
-      }
+    case EVT_RESIZE:
+    case EVT_MOVE_RESIZE: {
+      text_edit_layout(edit->model);
       break;
     }
     case EVT_VALUE_CHANGING: {
@@ -559,7 +560,7 @@ ret_t edit_on_event(widget_t* widget, event_t* e) {
       break;
   }
 
-  return RET_OK;
+  return ret;
 }
 
 ret_t edit_set_text_limit(widget_t* widget, uint32_t min, uint32_t max) {
@@ -706,9 +707,6 @@ ret_t edit_get_prop(widget_t* widget, const char* name, value_t* v) {
   } else if (tk_str_eq(name, WIDGET_PROP_PASSWORD_VISIBLE)) {
     value_set_bool(v, edit->password_visible);
     return RET_OK;
-  } else if (tk_str_eq(name, WIDGET_PROP_FOCUS)) {
-    value_set_bool(v, edit->focus);
-    return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_TIPS)) {
     value_set_str(v, edit->tips);
     return RET_OK;
@@ -721,6 +719,25 @@ ret_t edit_get_prop(widget_t* widget, const char* name, value_t* v) {
   }
 
   return RET_NOT_FOUND;
+}
+
+static ret_t edit_set_text(widget_t* widget, const value_t* v) {
+  wstr_t str;
+  wstr_init(&str, 0);
+  edit_t* edit = EDIT(widget);
+  return_value_if_fail(wstr_from_value(&str, v) == RET_OK, RET_BAD_PARAMS);
+
+  if (!wstr_equal(&(widget->text), &str)) {
+    wstr_set(&(widget->text), str.str);
+
+    text_edit_set_cursor(edit->model, widget->text.size);
+    edit_dispatch_event(widget, EVT_VALUE_CHANGED);
+    edit_update_status(widget);
+  }
+
+  wstr_reset(&str);
+
+  return RET_OK;
 }
 
 ret_t edit_set_prop(widget_t* widget, const char* name, const value_t* v) {
@@ -804,18 +821,14 @@ ret_t edit_set_prop(widget_t* widget, const char* name, const value_t* v) {
   } else if (tk_str_eq(name, WIDGET_PROP_PASSWORD_VISIBLE)) {
     edit_set_password_visible(widget, value_bool(v));
     return RET_OK;
-  } else if (tk_str_eq(name, WIDGET_PROP_FOCUS)) {
+  } else if (tk_str_eq(name, WIDGET_PROP_FOCUS) || tk_str_eq(name, WIDGET_PROP_FOCUSED)) {
     edit_set_focus(widget, value_bool(v));
     return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_TIPS)) {
     edit_set_input_tips(widget, value_str(v));
     return RET_OK;
-  } else if (tk_str_eq(name, WIDGET_PROP_TEXT)) {
-    edit_update_status(widget);
-    return RET_OK;
-  } else if (tk_str_eq(name, WIDGET_PROP_VALUE)) {
-    wstr_from_value(&(widget->text), v);
-    edit_update_status(widget);
+  } else if (tk_str_eq(name, WIDGET_PROP_VALUE) || tk_str_eq(name, WIDGET_PROP_TEXT)) {
+    edit_set_text(widget, v);
     return RET_OK;
   }
 
@@ -841,7 +854,6 @@ ret_t edit_set_focus(widget_t* widget, bool_t focus) {
   edit_t* edit = EDIT(widget);
   return_value_if_fail(edit != NULL, RET_BAD_PARAMS);
 
-  edit->focus = focus;
   widget_set_focused(widget, focus);
   edit_update_status(widget);
 
@@ -1109,7 +1121,6 @@ const char* s_edit_properties[] = {WIDGET_PROP_MIN,
                                    WIDGET_PROP_TOP_MARGIN,
                                    WIDGET_PROP_BOTTOM_MARGIN,
                                    WIDGET_PROP_TIPS,
-                                   WIDGET_PROP_FOCUS,
                                    WIDGET_PROP_PASSWORD_VISIBLE,
                                    NULL};
 TK_DECL_VTABLE(edit) = {.size = sizeof(edit_t),
@@ -1144,6 +1155,8 @@ widget_t* edit_create_ex(widget_t* parent, const widget_vtable_t* vt, xy_t x, xy
 
   edit->model = text_edit_create(widget, TRUE);
   ENSURE(edit->model != NULL);
+
+  widget_set_text(widget, L"");
 
   return widget;
 }

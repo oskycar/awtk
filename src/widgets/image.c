@@ -42,7 +42,7 @@ static ret_t image_on_paint_self(widget_t* widget, canvas_t* c) {
 
   if (vg != NULL) {
     if (image_need_transform(widget)) {
-      if(image->draw_type == IMAGE_DRAW_ICON) {
+      if (image->draw_type == IMAGE_DRAW_ICON) {
         vgcanvas_save(vg);
         image_transform(widget, c);
         vgcanvas_draw_icon(vg, &bitmap, 0, 0, bitmap.w, bitmap.h, 0, 0, widget->w, widget->h);
@@ -102,7 +102,6 @@ static const char* s_image_clone_properties[] = {WIDGET_PROP_IMAGE,      WIDGET_
 
 TK_DECL_VTABLE(image) = {.size = sizeof(image_t),
                          .type = WIDGET_TYPE_IMAGE,
-                         .enable_pool = TRUE,
                          .clone_properties = s_image_clone_properties,
                          .parent = TK_PARENT_VTABLE(image_base),
                          .create = image_create,

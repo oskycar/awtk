@@ -71,6 +71,14 @@ static ret_t hscroll_label_do_paint_self(widget_t* widget, canvas_t* c, uint32_t
     return hscroll_label_do_paint_self_ellipses(widget, c, left_margin, right_margin);
   }
 
+  if (w > hscroll_label->text_w) {
+    int32_t align_v = style_get_int(widget->astyle, STYLE_ID_TEXT_ALIGN_V, ALIGN_V_MIDDLE);
+    int32_t align_h = style_get_int(widget->astyle, STYLE_ID_TEXT_ALIGN_H, ALIGN_H_LEFT);
+    canvas_set_text_align(c, align_h, align_v);
+  } else {
+    canvas_set_text_align(c, ALIGN_H_LEFT, ALIGN_V_MIDDLE);
+  }
+
   r = rect_init(left_margin - hscroll_label->xoffset, 0, w, widget->h);
   canvas_draw_text_in_rect(c, text->str, text->size, &r);
 
@@ -103,7 +111,7 @@ static ret_t hscroll_label_on_paint_self(widget_t* widget, canvas_t* c) {
     canvas_set_clip_rect(c, &clip_r);
     canvas_set_font(c, font, font_size);
     canvas_set_text_color(c, text_color);
-    canvas_set_text_align(c, ALIGN_H_LEFT, ALIGN_V_MIDDLE);
+    // canvas_set_text_align(c, ALIGN_H_LEFT, ALIGN_V_MIDDLE);
 
     hscroll_label_do_paint_self(widget, c, left_margin, right_margin);
     canvas_set_clip_rect(c, &save_r);
@@ -378,7 +386,6 @@ static ret_t hscroll_label_on_event(widget_t* widget, event_t* e) {
 
 TK_DECL_VTABLE(hscroll_label) = {.size = sizeof(hscroll_label_t),
                                  .type = WIDGET_TYPE_HSCROLL_LABEL,
-                                 .enable_pool = TRUE,
                                  .parent = TK_PARENT_VTABLE(widget),
                                  .create = hscroll_label_create,
                                  .on_destroy = hscroll_label_on_destroy,
@@ -401,7 +408,7 @@ widget_t* hscroll_label_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h)
   hscroll_label->ellipses = FALSE;
   hscroll_label->only_focus = FALSE;
 
-  hscroll_label->timer_id = timer_add(hscroll_label_on_timer_start, widget, 100);
+  hscroll_label->timer_id = timer_add(hscroll_label_on_timer_start, widget, 10);
 
   return widget;
 }
