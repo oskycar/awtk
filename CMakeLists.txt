@@ -205,7 +205,9 @@ set(awtk_sources
     "${TK_SRC}/vgcanvas/vgcanvas_nanovg_gl.c"
     "${TK_SRC}/input_engines/input_engine_pinyin.cpp"
     "${TK_SRC}/lcd/lcd_nanovg.c"
-    "${TK_SRC}/main_loop/main_loop_sdl_gpu.c"
+    "${TK_SRC}/main_loop/main_loop_sdl.c"
+    "${TK_SRC}/native_window/native_window_sdl.c"
+    "${TK_SRC}/window_manager/window_manager_default.c"
     )
 
 #配置sdl库
